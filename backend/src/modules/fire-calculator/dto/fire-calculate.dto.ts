@@ -43,4 +43,11 @@ export class FireCalculateDto {
   @Min(0.02)
   @Max(0.05)
   withdrawalRate?: number;
+
+  @ApiPropertyOptional({ description: 'Additional monthly SIP on top of existing contributions (what-if)', example: 5000 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(500000)
+  additionalMonthlySip?: number;
 }

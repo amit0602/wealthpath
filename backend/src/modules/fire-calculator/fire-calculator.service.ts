@@ -39,7 +39,9 @@ export class FireCalculatorService {
       expectedReturnPostRetirement: new Decimal((dto.expectedReturnPost ?? profile.expectedReturnPost).toString()),
       withdrawalRate: new Decimal((dto.withdrawalRate ?? profile.withdrawalRate).toString()),
       currentCorpus,
-      monthlyContribution,
+      monthlyContribution: dto.additionalMonthlySip
+        ? monthlyContribution.plus(new Decimal(String(dto.additionalMonthlySip)))
+        : monthlyContribution,
     };
 
     const result = calculateFire(inputs);
