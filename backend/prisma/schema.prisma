@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums stored as String for SQLite compatibility.
+// Valid values enforced at the application layer (class-validator DTOs).
+// EmploymentType: salaried | self_employed | business | other
+// CityTier: metro | tier1 | tier2 | tier3
+// RiskAppetite: conservative | moderate | aggressive
+// InstrumentType: epf | ppf | nps_tier1 | nps_tier2 | elss | fd | rd | direct_equity | real_estate | gold | sgb | mutual_fund_equity | mutual_fund_debt | other
+// TaxRegime: old | new
+// SubscriptionPlan: free | premium
+// SubscriptionStatus: active | cancelled | expired | paused
+// ConsentType: data_processing | analytics | marketing
+
+model User {
+  id               String    @id @default(uuid())
+  phoneNumber      String    @unique @map("phone_number")
+  fullName         String    @map("full_name")
+  dateOfBirth      DateTime  @map("date_of_birth")
+  employmentType   String    @default("salaried") @map("employment_type")
+  city             String    @default("")
+  cityTier         String    @default("metro") @map("city_tier")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  financialProfile FinancialProfile?
+  investments      Investment[]
+  fireCalculations FireCalculation[]
+  taxProfile       TaxProfile[]
+  healthScores     HealthScore[]
+  subscription     Subscription?
+  consentRecords   ConsentRecord[]
+  auditLogs        AuditLog[]
+  otpRecords       OtpRecord[]
+
+  @@map("users")
+}
+
+model OtpRecord {
+  id          String    @id @default(uuid())
+  userId      String?   @map("user_id")
+  phoneNumber String    @map("phone_number")
+  otpHash     String    @map("otp_hash")
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("otp_records")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model FinancialProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique @map("user_id")
+  monthlyGrossIncome   Float    @map("monthly_gross_income")
+  monthlyTakeHome      Float    @map("monthly_take_home")
+  monthlyExpenses      Float    @map("monthly_expenses")
+  monthlyEmi           Float    @default(0) @map("monthly_emi")
+  dependentsCount      Int      @default(0) @map("dependents_count")
+  riskAppetite         String   @default("moderate") @map("risk_appetite")
+  targetRetirementAge  Int      @map("target_retirement_age")
+  desiredMonthlyIncome Float    @map("desired_monthly_income")
+  retirementCity       String   @map("retirement_city")
+  retirementCityTier   String   @default("metro") @map("retirement_city_tier")
+  inflationAssumption  Float    @default(0.06) @map("inflation_assumption")
+  expectedReturnPre    Float    @default(0.12) @map("expected_return_pre")
+  expectedReturnPost   Float    @default(0.07) @map("expected_return_post")
+  withdrawalRate       Float    @default(0.0333) @map("withdrawal_rate")
+  lifeExpectancy       Int      @default(85) @map("life_expectancy")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("financial_profiles")
+}
+
+model Investment {
+  id                  String    @id @default(uuid())
+  userId              String    @map("user_id")
+  instrumentType      String    @map("instrument_type")
+  name                String
+  currentValue        Float     @map("current_value")
+  monthlyContribution Float     @default(0) @map("monthly_contribution")
+  annualContribution  Float     @default(0) @map("annual_contribution")
+  expectedReturnRate  Float     @map("expected_return_rate")
+  startDate           DateTime? @map("start_date")
+  maturityDate        DateTime? @map("maturity_date")
+  lockInUntil         DateTime? @map("lock_in_until")
+  interestRate        Float?    @map("interest_rate")
+  notes               String?
+  isActive            Boolean   @default(true) @map("is_active")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  user         User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  valueHistory InvestmentValueHistory[]
+
+  @@map("investments")
+}
+
+model InvestmentValueHistory {
+  id            String   @id @default(uuid())
+  investmentId  String   @map("investment_id")
+  recordedValue Float    @map("recorded_value")
+  recordedAt    DateTime @default(now()) @map("recorded_at")
+
+  investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+
+  @@index([investmentId, recordedAt])
+  @@map("investment_value_history")
+}
+
+model FireCalculation {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  corpusRequired     Float    @map("corpus_required")
+  currentCorpusFv    Float    @map("current_corpus_fv")
+  corpusGap          Float    @map("corpus_gap")
+  monthlySipRequired Float    @map("monthly_sip_required")
+  yearsToFire        Float    @map("years_to_fire")
+  fireAge            Int      @map("fire_age")
+  calculationInputs  String   @map("calculation_inputs")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fire_calculations")
+}
+
+model TaxProfile {
+  id                 String    @id @default(uuid())
+  userId             String    @map("user_id")
+  financialYear      String    @map("financial_year")
+  grossSalary        Float     @map("gross_salary")
+  hraReceived        Float     @default(0) @map("hra_received")
+  rentPaid           Float     @default(0) @map("rent_paid")
+  isMetro            Boolean   @default(true) @map("is_metro")
+  section80cUsed     Float     @default(0) @map("section_80c_used")
+  section80dUsed     Float     @default(0) @map("section_80d_used")
+  section80ccd1bUsed Float     @default(0) @map("section_80ccd1b_used")
+  homeLoanInterest   Float     @default(0) @map("home_loan_interest")
+  recommendedRegime  String?   @map("recommended_regime")
+  oldRegimeTax       Float?    @map("old_regime_tax")
+  newRegimeTax       Float?    @map("new_regime_tax")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, financialYear])
+  @@map("tax_profiles")
+}
+
+model HealthScore {
+  id                   String   @id @default(uuid())
+  userId               String   @map("user_id")
+  overallScore         Int      @map("overall_score")
+  emergencyFundScore   Int      @map("emergency_fund_score")
+  insuranceScore       Int      @map("insurance_score")
+  debtRatioScore       Int      @map("debt_ratio_score")
+  savingsRateScore     Int      @map("savings_rate_score")
+  retirementTrackScore Int      @map("retirement_track_score")
+  scoreBreakdown       String   @map("score_breakdown")
+  calculatedAt         DateTime @default(now()) @map("calculated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("health_scores")
+}
+
+model Subscription {
+  id          String    @id @default(uuid())
+  userId      String    @unique @map("user_id")
+  plan        String    @default("free")
+  status      String    @default("active")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  expiresAt   DateTime? @map("expires_at")
+  cancelledAt DateTime? @map("cancelled_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model ConsentRecord {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  consentType    String    @map("consent_type")
+  consentGiven   Boolean   @map("consent_given")
+  consentVersion String    @map("consent_version")
+  ipAddress      String?   @map("ip_address")
+  givenAt        DateTime  @default(now()) @map("given_at")
+  withdrawnAt    DateTime? @map("withdrawn_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consent_records")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  ipAddress  String?  @map("ip_address")
+  statusCode Int?     @map("status_code")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
