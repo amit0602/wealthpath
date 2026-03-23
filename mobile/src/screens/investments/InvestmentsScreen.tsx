@@ -1,7 +1,19 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, RefreshControl, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  RefreshControl,
+  Alert,
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { investmentsApi } from '../../services/api';
+import { MainStackParams } from '../../navigation/AppNavigator';
 
 const INSTRUMENT_LABELS: Record<string, string> = {
   epf: 'EPF', ppf: 'PPF', nps_tier1: 'NPS Tier 1', nps_tier2: 'NPS Tier 2',
@@ -20,7 +32,10 @@ const formatINR = (val: number) => {
   return `₹${val.toLocaleString('en-IN')}`;
 };
 
+type NavProp = NativeStackNavigationProp<MainStackParams>;
+
 export function InvestmentsScreen() {
+  const navigation = useNavigation<NavProp>();
   const [data, setData] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -46,7 +61,16 @@ export function InvestmentsScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
       >
-        <Text style={styles.title}>Investments</Text>
+        {/* Header row with title and Add button */}
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Investments</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('EditInvestment', {})}
+          >
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
+        </View>
 
         {summary && (
           <>
@@ -85,19 +109,30 @@ export function InvestmentsScreen() {
         <Text style={styles.sectionTitle}>Your Investments</Text>
 
         {investments.length === 0 ? (
-          <View style={styles.emptyCard}>
+          <TouchableOpacity
+            style={styles.emptyCard}
+            onPress={() => navigation.navigate('EditInvestment', {})}
+          >
             <Text style={styles.emptyText}>No investments added yet</Text>
-            <Text style={styles.emptySub}>Complete onboarding to add your savings</Text>
-          </View>
+            <Text style={styles.emptySub}>Tap here to add your first investment</Text>
+          </TouchableOpacity>
         ) : (
           investments.map((inv: any) => (
-            <View key={inv.id} style={styles.investmentCard}>
+            <TouchableOpacity
+              key={inv.id}
+              style={styles.investmentCard}
+              onPress={() => navigation.navigate('EditInvestment', { investmentId: inv.id })}
+              activeOpacity={0.7}
+            >
               <View style={styles.invHeader}>
-                <View>
+                <View style={styles.invInfo}>
                   <Text style={styles.invName}>{inv.name}</Text>
                   <Text style={styles.invType}>{INSTRUMENT_LABELS[inv.instrumentType] ?? inv.instrumentType}</Text>
                 </View>
-                <Text style={styles.invValue}>{formatINR(Number(inv.currentValue))}</Text>
+                <View style={styles.invRight}>
+                  <Text style={styles.invValue}>{formatINR(Number(inv.currentValue))}</Text>
+                  <Text style={styles.editHint}>Edit ›</Text>
+                </View>
               </View>
               {Number(inv.monthlyContribution) > 0 && (
                 <Text style={styles.invContrib}>+{formatINR(Number(inv.monthlyContribution))}/mo</Text>
@@ -105,7 +140,7 @@ export function InvestmentsScreen() {
               {inv.lockInUntil && (
                 <Text style={styles.invLockIn}>🔒 Locked until {new Date(inv.lockInUntil).toLocaleDateString('en-IN')}</Text>
               )}
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
@@ -116,7 +151,15 @@ export function InvestmentsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   content: { padding: 20, gap: 14, paddingBottom: 32 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  addButton: {
+    backgroundColor: '#1B4332',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  addButtonText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   totalCard: { backgroundColor: '#1B4332', borderRadius: 16, padding: 20 },
   totalLabel: { fontSize: 12, color: '#A7F3D0', fontWeight: '600', textTransform: 'uppercase' },
   totalValue: { fontSize: 32, fontWeight: '800', color: '#fff', marginTop: 4 },
@@ -134,9 +177,12 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 13, color: '#9CA3AF', marginTop: 4 },
   investmentCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, gap: 4, elevation: 1 },
   invHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  invInfo: { flex: 1 },
   invName: { fontSize: 15, fontWeight: '600', color: '#111827' },
   invType: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  invRight: { alignItems: 'flex-end', gap: 2 },
   invValue: { fontSize: 17, fontWeight: '700', color: '#1B4332' },
+  editHint: { fontSize: 11, color: '#9CA3AF' },
   invContrib: { fontSize: 13, color: '#6B7280' },
   invLockIn: { fontSize: 12, color: '#F59E0B' },
 });
