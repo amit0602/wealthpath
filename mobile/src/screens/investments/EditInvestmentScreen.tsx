@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParams } from '../../navigation/AppNavigator';
-import { investmentsApi } from '../../services/api';
+import { investmentsApi, fireApi, healthScoreApi } from '../../services/api';
 
 type Props = NativeStackScreenProps<MainStackParams, 'EditInvestment'>;
 
@@ -72,6 +72,13 @@ export function EditInvestmentScreen({ route, navigation }: Props) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Recalculate FIRE and health score after any investment change so dependent
+  // screens show fresh data when the user navigates back to them.
+  const triggerAnalysisRefresh = () => {
+    fireApi.calculate().catch(() => {});
+    healthScoreApi.calculate().catch(() => {});
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert('Validation', 'Please enter a name for this investment.');
@@ -101,6 +108,7 @@ export function EditInvestmentScreen({ route, navigation }: Props) {
       } else {
         await investmentsApi.create(payload);
       }
+      triggerAnalysisRefresh();
       navigation.goBack();
     } catch {
       Alert.alert('Error', 'Failed to save investment. Please try again.');
@@ -122,6 +130,7 @@ export function EditInvestmentScreen({ route, navigation }: Props) {
             setDeleting(true);
             try {
               await investmentsApi.delete(investmentId!);
+              triggerAnalysisRefresh();
               navigation.goBack();
             } catch {
               Alert.alert('Error', 'Failed to delete investment.');

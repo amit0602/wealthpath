@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, TextInput, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { fireApi } from '../../services/api';
 
 const formatCrore = (val: number) => {
@@ -33,7 +34,7 @@ export function FIREScreen() {
     }
   };
 
-  useEffect(() => { calculate(); }, []);
+  useFocusEffect(useCallback(() => { calculate(); }, []));
 
   return (
     <SafeAreaView style={styles.container}>
