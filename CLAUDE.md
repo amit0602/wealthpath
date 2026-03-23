@@ -4,6 +4,19 @@ Codebase instructions, best practices, and current progress for AI-assisted deve
 
 ---
 
+## Git Workflow
+
+- **One PR per feature** — never bundle multiple features into a single PR
+- **Always branch from main** — before starting any new task:
+  ```bash
+  git checkout main
+  git pull origin main
+  git checkout -b claude/<feature-name>
+  ```
+- **Never push to a previous feature branch** for a new task — always start fresh from main
+
+---
+
 ## Project Overview
 
 India-first financial independence (FIRE) planning app. Phase 1 is free — manual data entry, FIRE calculations, tax optimization, health score. Phase 2 adds Account Aggregator auto-sync and a ₹499/mo premium subscription.
