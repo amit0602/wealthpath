@@ -61,6 +61,7 @@ export class FireCalculatorService {
     return {
       corpusRequired: result.corpusRequired,
       currentCorpusFutureValue: result.currentCorpusFutureValue,
+      existingSipFutureValue: result.existingSipFutureValue,
       corpusGap: result.corpusGap,
       monthlySipRequired: result.monthlySipRequired,
       yearsToFire: result.yearsToFire,
