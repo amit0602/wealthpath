@@ -67,9 +67,14 @@ export function ProfileScreen() {
             <View>
               <Text style={styles.name}>{user.fullName || 'Complete your profile'}</Text>
               <Text style={styles.phone}>{user.phoneNumber}</Text>
-              <View style={[styles.planBadge, user.subscription?.plan === 'premium' && styles.planBadgePremium]}>
-                <Text style={styles.planText}>{user.subscription?.plan === 'premium' ? '⭐ Premium' : 'Free Plan'}</Text>
-              </View>
+              <TouchableOpacity
+                style={[styles.planBadge, user.subscription?.plan === 'premium' && styles.planBadgePremium]}
+                onPress={() => navigation.navigate('Subscription')}
+              >
+                <Text style={styles.planText}>
+                  {user.subscription?.plan === 'premium' ? '⭐ Premium' : 'Free Plan — Upgrade ›'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}

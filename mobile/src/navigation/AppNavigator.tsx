@@ -22,6 +22,7 @@ import { EditPersonalScreen } from '../screens/profile/EditPersonalScreen';
 import { EditFinancialsScreen } from '../screens/profile/EditFinancialsScreen';
 import { EditGoalsScreen } from '../screens/profile/EditGoalsScreen';
 import { EditInvestmentScreen } from '../screens/investments/EditInvestmentScreen';
+import { SubscriptionScreen } from '../screens/profile/SubscriptionScreen';
 
 export type OnboardingStackParams = {
   Welcome: undefined;
@@ -48,6 +49,7 @@ export type MainStackParams = {
   EditFinancials: undefined;
   EditGoals: undefined;
   EditInvestment: { investmentId?: string };
+  Subscription: undefined;
 };
 
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
@@ -102,6 +104,7 @@ function MainStackNavigator() {
       <MainStack.Screen name="EditFinancials" component={EditFinancialsScreen} />
       <MainStack.Screen name="EditGoals" component={EditGoalsScreen} />
       <MainStack.Screen name="EditInvestment" component={EditInvestmentScreen} />
+      <MainStack.Screen name="Subscription" component={SubscriptionScreen} />
     </MainStack.Navigator>
   );
 }
