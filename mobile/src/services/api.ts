@@ -108,3 +108,18 @@ export const healthScoreApi = {
   calculate: () => api.post('/health-score/calculate'),
   getLatest: () => api.get('/health-score/latest'),
 };
+
+// Notifications
+export const notificationsApi = {
+  registerToken: (token: string, platform: 'ios' | 'android' | 'web') =>
+    api.post('/notifications/token', { token, platform }),
+  deregisterToken: (token: string) =>
+    api.delete(`/notifications/token?token=${encodeURIComponent(token)}`),
+  getPreferences: () => api.get('/notifications/preferences'),
+  updatePreferences: (data: {
+    driftAlertsEnabled?: boolean;
+    taxRemindersEnabled?: boolean;
+    driftThresholdPercent?: number;
+  }) => api.put('/notifications/preferences', data),
+  getLogs: () => api.get('/notifications/logs'),
+};

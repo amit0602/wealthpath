@@ -97,6 +97,13 @@ export function ProfileScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Settings</Text>
+          <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('NotificationPreferences')}>
+            <View>
+              <Text style={styles.settingLabel}>🔔 Notification Preferences</Text>
+              <Text style={styles.settingSubtitle}>Drift alerts, tax reminders, sensitivity</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
           {[
             { label: '📊 Export My Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
             { label: '🔒 Security Log', subtitle: 'View recent login activity', action: () => {} },
