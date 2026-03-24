@@ -7,6 +7,7 @@ import { FireCalculatorModule } from './modules/fire-calculator/fire-calculator.
 import { InvestmentsModule } from './modules/investments/investments.module';
 import { TaxModule } from './modules/tax/tax.module';
 import { HealthScoreModule } from './modules/health-score/health-score.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { HealthScoreModule } from './modules/health-score/health-score.module';
     InvestmentsModule,
     TaxModule,
     HealthScoreModule,
+    SubscriptionsModule,
   ],
 })
 export class AppModule {}
