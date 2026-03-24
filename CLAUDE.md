@@ -21,7 +21,23 @@ Codebase instructions, best practices, and current progress for AI-assisted deve
 
 ## Project Overview
 
-India-first financial independence (FIRE) planning app. Phase 1 is free — manual data entry, FIRE calculations, tax optimization, health score. Phase 2 adds Account Aggregator auto-sync and a ₹499/mo premium subscription.
+WealthPath is an **India-first personal finance dashboard and FIRE planning tool**. It is a **read-only monitoring and planning app** — it helps users understand their current financial position, track all their investments in one place, and plan their path to financial independence.
+
+**What it is NOT:**
+- Not an investment advisor — no product recommendations, no SEBI registration required
+- Not a broker or distributor — no transactions, no order execution
+- Not a wealth manager — no custody of funds
+
+**What it IS:**
+- A personal finance dashboard: one place to see all investments (MF, EPF, PPF, NPS, equity, FD, real estate, gold)
+- A FIRE calculator: tells users how far they are from financial independence
+- A tax planner: old vs new regime comparison for their income
+- A financial health scorer: 0–100 score across 5 dimensions
+
+Phase 1 is free — manual data entry, FIRE calculations, tax comparison, health score.
+Phase 2 adds premium features (₹499/mo · ₹3,999/yr): push notifications, MF import from CAMS/KFintech, demat sync, and Account Aggregator auto-sync.
+
+**Disclaimer present on all projection/estimate screens:** *"For educational purposes only. Not investment advice."*
 
 ---
 
@@ -66,7 +82,8 @@ RootStack
         ├── EditPersonal    (name, DOB, city, employment)
         ├── EditFinancials  (income, expenses, EMI, dependents)
         ├── EditGoals       (retirement age, desired income, city, risk)
-        └── EditInvestment  (add or edit a single investment)
+        ├── EditInvestment  (add or edit a single investment)
+        └── Subscription    (plan selection + Razorpay billing)
 ```
 
 ### Key Files
@@ -77,16 +94,21 @@ RootStack
 - `backend/src/modules/auth/auth.service.ts` — OTP generation, JWT issue, refresh
 - `backend/src/modules/fire-calculator/calculations/corpus.calculator.ts` — FIRE math
 - `backend/src/modules/fire-calculator/calculations/tax.calculator.ts` — FY 2025-26 tax slabs
+- `backend/src/modules/subscriptions/subscriptions.service.ts` — Razorpay order creation, HMAC verification, plan activation
+- `backend/src/common/guards/premium.guard.ts` — reusable guard; apply with `@UseGuards(JwtAuthGuard, PremiumGuard)` on any premium endpoint
 - `backend/prisma/schema.prisma` — master DB schema
 
 ### API Surface (`mobile/src/services/api.ts`)
 ```typescript
-authApi        → /auth/send-otp, /auth/verify-otp, /auth/logout
-usersApi       → /users/me (GET, PUT), /users/me/financial-profile (PUT)
-fireApi        → /fire/calculate (POST), /fire/latest (GET)
-investmentsApi → /investments (GET, POST), /investments/:id (PUT, DELETE)
-taxApi         → /tax/comparison (GET), /tax/profile (PUT)
-healthScoreApi → /health-score/calculate (POST), /health-score/latest (GET)
+authApi           → /auth/send-otp, /auth/verify-otp, /auth/logout
+usersApi          → /users/me (GET, PUT), /users/me/financial-profile (PUT)
+fireApi           → /fire/calculate (POST), /fire/latest (GET)
+investmentsApi    → /investments (GET, POST), /investments/:id (PUT, DELETE)
+taxApi            → /tax/comparison (GET), /tax/profile (PUT)
+healthScoreApi    → /health-score/calculate (POST), /health-score/latest (GET)
+subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST),
+                    /subscriptions/verify-payment (POST), /subscriptions/cancel (POST),
+                    /subscriptions/dev-activate (POST — dev only)
 ```
 
 ---
@@ -97,6 +119,12 @@ healthScoreApi → /health-score/calculate (POST), /health-score/latest (GET)
 - No SMS gateway. `sendOtp` returns `{ message, devOtp }` when `NODE_ENV !== 'production'`.
 - `OTPVerificationScreen` auto-fills and verifies `devOtp` on mount — zero friction in dev.
 - In production: `devOtp` is `undefined`; users enter OTP from SMS normally.
+
+### Premium (Dev Mode)
+- No Razorpay account needed in dev. `POST /subscriptions/dev-activate` instantly upgrades the user to premium.
+- `SubscriptionScreen` calls `devActivate()` directly in dev. In production, replace with `createOrder()` → Razorpay payment sheet → `verifyPayment()`.
+- The endpoint throws `403 Forbidden` in production (`NODE_ENV === 'production'`).
+- To gate a new premium endpoint: `@UseGuards(JwtAuthGuard, PremiumGuard)` — `PremiumGuard` is in `backend/src/common/guards/premium.guard.ts`.
 
 ### Auth / Storage
 - `expo-secure-store` throws on web. All token reads/writes wrapped in try-catch with `localStorage` fallback.
@@ -200,9 +228,9 @@ healthScoreApi → /health-score/calculate (POST), /health-score/latest (GET)
 
 ---
 
-## Current Status (2026-03-23)
+## Current Status (2026-03-24)
 
-### Completed ✅
+### Phase 1 — Completed ✅
 - **Onboarding flow** — all 8 screens working end-to-end in web preview
 - **Auth** — phone + OTP (dev auto-fill), JWT, refresh tokens, logout
 - **Dashboard** — Health Score, FIRE progress ring, portfolio summary; refreshes on every tab focus
@@ -218,11 +246,16 @@ healthScoreApi → /health-score/calculate (POST), /health-score/latest (GET)
 - **PDF Report Export** — one-tap export from Profile; covers health score, FIRE projections, portfolio, tax comparison; shares via native share sheet
 - **UI polish** — grey placeholders, `useFocusEffect` on all tab screens
 
-### Phase 2 (Future)
-- Account Aggregator auto-sync (Finvu / OneMoney)
-- CAMS/KFintech MF import, CDSL/NSDL demat sync
-- Razorpay subscriptions (₹499/mo or ₹3,999/yr)
-- Push notifications: portfolio drift alerts, tax harvesting opportunities
+### Phase 2 — In Progress
+- **Razorpay Subscriptions** ✅ — `SubscriptionsModule`, `SubscriptionOrder` model, `PremiumGuard`, `SubscriptionScreen` with monthly/annual plan cards; dev-activate bypass for local testing (PR #5)
+
+### Phase 2 — Remaining (build in this order)
+1. **Push Notifications** — Expo push, portfolio drift alerts (daily cron), tax harvesting reminders (weekly cron); `PushToken` + `NotificationPreference` + `NotificationLog` models; `@nestjs/bull` + `@nestjs/schedule`
+2. **CAMS / KFintech MF Import** — file upload (PDF/CSV CAS), parse → review → confirm upsert into `Investment`; zero regulatory overhead (file-based, no API agreement)
+3. **CDSL / NSDL Demat Sync** — via Account Aggregator EQUITIES FI type (preferred) or direct CAS upload fallback; `DematSyncRequest` model
+4. **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before production; `AaConsent` model; periodic Bull queue sync
+
+> **Regulatory note:** WealthPath is a personal finance dashboard — not an investment advisor. No SEBI RIA license is required. The only regulatory overhead in Phase 2 is FIU registration for Account Aggregator (Feature 4), which can be deferred until after Features 1–3 are live and validated.
 
 ---
 
@@ -231,13 +264,15 @@ healthScoreApi → /health-score/calculate (POST), /health-score/latest (GET)
 ```bash
 # Backend
 cd backend
-npm run start:dev        # NestJS on port 3000
+cp .env.example .env   # fill in JWT_SECRET + JWT_REFRESH_SECRET
+DATABASE_URL="file:./prisma/dev.db" npx prisma@5.9.1 migrate dev
+npm run start:dev      # NestJS on http://localhost:3000
 
 # Mobile (web)
 cd mobile
-npx expo start --web     # Expo on port 8081
+npx expo start --web   # Expo on http://localhost:8081
 ```
 
 Database is SQLite at `backend/prisma/dev.db` — no Docker needed.
 
-To reset data: `npx prisma db push --force-reset` from `backend/`.
+To reset data: `DATABASE_URL="file:./prisma/dev.db" npx prisma@5.9.1 db push --force-reset` from `backend/`.
