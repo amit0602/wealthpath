@@ -18,6 +18,9 @@ datasource db {
 // SubscriptionStatus: active | cancelled | expired | paused
 // ConsentType: data_processing | analytics | marketing
 // SubscriptionOrderStatus: pending | paid | failed
+// Platform: ios | android | web
+// NotificationType: drift_alert | tax_reminder
+// NotificationStatus: sent | failed
 
 model User {
   id               String    @id @default(uuid())
@@ -31,16 +34,19 @@ model User {
   updatedAt        DateTime  @updatedAt @map("updated_at")
   deletedAt        DateTime? @map("deleted_at")
 
-  financialProfile   FinancialProfile?
-  investments        Investment[]
-  fireCalculations   FireCalculation[]
-  taxProfile         TaxProfile[]
-  healthScores       HealthScore[]
-  subscription       Subscription?
-  consentRecords     ConsentRecord[]
-  auditLogs          AuditLog[]
-  otpRecords         OtpRecord[]
-  subscriptionOrders SubscriptionOrder[]
+  financialProfile       FinancialProfile?
+  investments            Investment[]
+  fireCalculations       FireCalculation[]
+  taxProfile             TaxProfile[]
+  healthScores           HealthScore[]
+  subscription           Subscription?
+  consentRecords         ConsentRecord[]
+  auditLogs              AuditLog[]
+  otpRecords             OtpRecord[]
+  subscriptionOrders     SubscriptionOrder[]
+  pushTokens             PushToken[]
+  notificationPreference NotificationPreference?
+  notificationLogs       NotificationLog[]
 
   @@map("users")
 }
@@ -251,4 +257,48 @@ model AuditLog {
   user User? @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  platform  String   // ios | android | web
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_tokens")
+}
+
+model NotificationPreference {
+  id                    String   @id @default(uuid())
+  userId                String   @unique @map("user_id")
+  driftAlertsEnabled    Boolean  @default(true) @map("drift_alerts_enabled")
+  taxRemindersEnabled   Boolean  @default(true) @map("tax_reminders_enabled")
+  driftThresholdPercent Float    @default(5.0) @map("drift_threshold_percent")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model NotificationLog {
+  id     String   @id @default(uuid())
+  userId String   @map("user_id")
+  type   String   // drift_alert | tax_reminder
+  title  String
+  body   String
+  status String   // sent | failed
+  error  String?
+  sentAt DateTime @default(now()) @map("sent_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sentAt])
+  @@map("notification_logs")
 }

@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { useAuthStore } from '../store/authStore';
+import { notificationsApi } from '../services/api';
 
 // Screens
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
@@ -23,6 +25,7 @@ import { EditFinancialsScreen } from '../screens/profile/EditFinancialsScreen';
 import { EditGoalsScreen } from '../screens/profile/EditGoalsScreen';
 import { EditInvestmentScreen } from '../screens/investments/EditInvestmentScreen';
 import { SubscriptionScreen } from '../screens/profile/SubscriptionScreen';
+import { NotificationPreferencesScreen } from '../screens/profile/NotificationPreferencesScreen';
 
 export type OnboardingStackParams = {
   Welcome: undefined;
@@ -50,6 +53,7 @@ export type MainStackParams = {
   EditGoals: undefined;
   EditInvestment: { investmentId?: string };
   Subscription: undefined;
+  NotificationPreferences: undefined;
 };
 
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
@@ -105,14 +109,41 @@ function MainStackNavigator() {
       <MainStack.Screen name="EditGoals" component={EditGoalsScreen} />
       <MainStack.Screen name="EditInvestment" component={EditInvestmentScreen} />
       <MainStack.Screen name="Subscription" component={SubscriptionScreen} />
+      <MainStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
     </MainStack.Navigator>
   );
+}
+
+async function registerPushToken() {
+  if (Platform.OS === 'web') return; // Web push not supported via Expo
+
+  try {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    let finalStatus = existing;
+    if (existing !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') return;
+
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const platform = Platform.OS === 'ios' ? 'ios' : 'android';
+    await notificationsApi.registerToken(tokenData.data, platform);
+  } catch {
+    // Non-critical — silently ignore if push token registration fails
+  }
 }
 
 export function AppNavigator() {
   const { isAuthenticated, isOnboardingComplete, isLoading, checkAuth } = useAuthStore();
 
   useEffect(() => { checkAuth(); }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && isOnboardingComplete) {
+      registerPushToken();
+    }
+  }, [isAuthenticated, isOnboardingComplete]);
 
   if (isLoading) {
     return (

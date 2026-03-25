@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -8,9 +9,11 @@ import { InvestmentsModule } from './modules/investments/investments.module';
 import { TaxModule } from './modules/tax/tax.module';
 import { HealthScoreModule } from './modules/health-score/health-score.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
     AuthModule,
@@ -20,6 +23,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
     TaxModule,
     HealthScoreModule,
     SubscriptionsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

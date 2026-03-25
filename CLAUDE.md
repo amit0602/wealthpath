@@ -16,6 +16,12 @@ Codebase instructions, best practices, and current progress for AI-assisted deve
 - **Never push to a previous feature branch** for a new task — always start fresh from main
 - **Commit messages** — use conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`
 - **PR per task** — open a dedicated PR immediately after pushing the branch
+- **ALWAYS pull main before pushing** — immediately before every `git push`, merge the latest main into the feature branch to avoid conflicts:
+  ```bash
+  git fetch origin main
+  git merge origin/main   # resolve any conflicts, then:
+  git push -u origin <branch-name>
+  ```
 
 ---
 
