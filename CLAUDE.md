@@ -234,10 +234,10 @@ subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST
 
 ---
 
-## Current Status (2026-03-24)
+## Current Status (2026-03-25)
 
 ### Phase 1 — Completed ✅
-- **Onboarding flow** — all 8 screens working end-to-end in web preview
+- **Onboarding flow** — all 8 screens working end-to-end in web preview; inline form validation on all mandatory fields with red-border + error messages; post-OTP navigation bug fixed (new users now land on BasicProfile correctly)
 - **Auth** — phone + OTP (dev auto-fill), JWT, refresh tokens, logout
 - **Dashboard** — Health Score, FIRE progress ring, portfolio summary; refreshes on every tab focus
 - **FIRE Calculator** — corpus, SIP target, adjustable assumptions; `useFocusEffect` for live refresh
@@ -254,12 +254,14 @@ subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST
 
 ### Phase 2 — In Progress
 - **Razorpay Subscriptions** ✅ — `SubscriptionsModule`, `SubscriptionOrder` model, `PremiumGuard`, `SubscriptionScreen` with monthly/annual plan cards; dev-activate bypass for local testing (PR #5)
+- **Push Notifications** ✅ — `NotificationsModule`, `PushToken` + `NotificationPreference` + `NotificationLog` models, token registration endpoint, preferences GET/PUT, notification log endpoint; `@nestjs/schedule` cron stubs for drift alerts and tax reminders (PR #8)
 
 ### Phase 2 — Remaining (build in this order)
-1. **Push Notifications** — Expo push, portfolio drift alerts (daily cron), tax harvesting reminders (weekly cron); `PushToken` + `NotificationPreference` + `NotificationLog` models; `@nestjs/bull` + `@nestjs/schedule`
+1. **Push Notifications cron jobs** — wire up the drift alert and tax harvesting reminder cron jobs with actual portfolio comparison logic and Expo push delivery
 2. **CAMS / KFintech MF Import** — file upload (PDF/CSV CAS), parse → review → confirm upsert into `Investment`; zero regulatory overhead (file-based, no API agreement)
-3. **CDSL / NSDL Demat Sync** — via Account Aggregator EQUITIES FI type (preferred) or direct CAS upload fallback; `DematSyncRequest` model
-4. **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before production; `AaConsent` model; periodic Bull queue sync
+3. **CAMS / KFintech MF Import** — file upload (PDF/CSV CAS), parse → review → confirm upsert into `Investment`; zero regulatory overhead (file-based, no API agreement)
+4. **CDSL / NSDL Demat Sync** — via Account Aggregator EQUITIES FI type (preferred) or direct CAS upload fallback; `DematSyncRequest` model
+5. **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before production; `AaConsent` model; periodic Bull queue sync
 
 > **Regulatory note:** WealthPath is a personal finance dashboard — not an investment advisor. No SEBI RIA license is required. The only regulatory overhead in Phase 2 is FIU registration for Account Aggregator (Feature 4), which can be deferred until after Features 1–3 are live and validated.
 
