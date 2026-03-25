@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { taxApi } from '../../services/api';
 
@@ -14,7 +14,7 @@ export function TaxPlannerScreen() {
     setLoading(true);
     taxApi.getComparison()
       .then(({ data }) => setTax(data))
-      .catch(console.error)
+      .catch(() => Alert.alert('Error', 'Could not load tax comparison. Please try again.'))
       .finally(() => setLoading(false));
   }, []));
 

@@ -5,11 +5,11 @@ import { RegisterTokenDto } from './dto/register-token.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 
 // Equity instrument types for drift calculation
+// Note: sgb and gold are excluded — they are commodity instruments, not equity
 const EQUITY_TYPES = new Set([
   'direct_equity',
   'mutual_fund_equity',
   'elss',
-  'sgb',
 ]);
 
 // Target equity allocation (%) by risk appetite

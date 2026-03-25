@@ -93,7 +93,7 @@ export function SubscriptionScreen() {
         {/* Current plan status */}
         <View style={[styles.statusCard, isPremium ? styles.statusCardPremium : styles.statusCardFree]}>
           <Text style={styles.statusLabel}>Current Plan</Text>
-          <Text style={styles.statusPlan}>{isPremium ? '⭐ Premium' : 'Free'}</Text>
+          <Text style={isPremium ? styles.statusPlanPremium : styles.statusPlanFree}>{isPremium ? '⭐ Premium' : 'Free'}</Text>
           {isPremium && subscription?.expiresAt && (
             <Text style={styles.statusExpiry}>
               Active until {new Date(subscription.expiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -205,7 +205,8 @@ const styles = StyleSheet.create({
   statusCardFree: { backgroundColor: '#fff' },
   statusCardPremium: { backgroundColor: '#1B4332' },
   statusLabel: { fontSize: 12, color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  statusPlan: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 4 },
+  statusPlanPremium: { fontSize: 28, fontWeight: '800', color: '#fff', marginTop: 4 },
+  statusPlanFree: { fontSize: 28, fontWeight: '800', color: '#111827', marginTop: 4 },
   statusExpiry: { fontSize: 13, color: '#6EE7B7', marginTop: 4 },
   statusCancelled: { fontSize: 13, color: '#FCA5A5', marginTop: 4 },
   section: { backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 12, elevation: 1 },

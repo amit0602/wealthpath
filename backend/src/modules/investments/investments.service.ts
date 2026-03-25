@@ -63,7 +63,7 @@ export class InvestmentsService {
 
     // Save value history snapshot
     const dtoAny = dto as any;
-    if (dtoAny.currentValue && dtoAny.currentValue !== investment.currentValue) {
+    if (dtoAny.currentValue !== undefined && dtoAny.currentValue !== investment.currentValue) {
       await this.prisma.investmentValueHistory.create({
         data: { investmentId: id, recordedValue: investment.currentValue },
       });
