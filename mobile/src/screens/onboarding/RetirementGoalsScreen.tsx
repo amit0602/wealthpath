@@ -10,10 +10,26 @@ export function RetirementGoalsScreen({ navigation }: Props) {
   const [retirementAge, setRetirementAge] = useState('60');
   const [desiredIncome, setDesiredIncome] = useState('');
   const [retirementCity, setRetirementCity] = useState('');
+  const [submitted, setSubmitted] = useState(false);
 
-  const isValid = retirementAge && desiredIncome && retirementCity;
+  const ageError = !retirementAge
+    ? 'Retirement age is required'
+    : isNaN(Number(retirementAge))
+    ? 'Enter a valid age'
+    : Number(retirementAge) < 40 || Number(retirementAge) > 70
+    ? 'Retirement age must be between 40 and 70'
+    : null;
+
+  const incomeError = !desiredIncome || Number(desiredIncome) <= 0
+    ? 'Desired monthly income is required and must be greater than 0'
+    : null;
+
+  const cityError = !retirementCity.trim() ? 'Retirement city is required' : null;
+
+  const isValid = !ageError && !incomeError && !cityError;
 
   const handleNext = async () => {
+    setSubmitted(true);
     if (!isValid) return;
     try {
       await usersApi.updateFinancialProfile({
@@ -38,7 +54,7 @@ export function RetirementGoalsScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Target Retirement Age</Text>
+          <Text style={styles.label}>Target Retirement Age *</Text>
           <View style={styles.ageRow}>
             {[45, 50, 55, 60, 65].map((age) => (
               <TouchableOpacity
@@ -51,30 +67,33 @@ export function RetirementGoalsScreen({ navigation }: Props) {
             ))}
           </View>
           <TextInput
-            style={styles.input}
+            style={[styles.input, submitted && ageError ? styles.inputError : null]}
             placeholder="Or enter custom age (40-70)"
             placeholderTextColor="#9CA3AF"
             keyboardType="number-pad"
             value={retirementAge}
             onChangeText={setRetirementAge}
           />
+          {submitted && ageError ? <Text style={styles.errorText}>{ageError}</Text> : null}
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Desired Monthly Income After Retirement</Text>
+          <Text style={styles.label}>Desired Monthly Income After Retirement *</Text>
           <Text style={styles.hint}>In today's rupees — we'll adjust for inflation</Text>
-          <View style={styles.inputRow}>
+          <View style={[styles.inputRow, submitted && incomeError ? styles.inputRowError : null]}>
             <Text style={styles.rupee}>₹</Text>
             <TextInput style={styles.inputFlex} placeholder="e.g. 100000" placeholderTextColor="#9CA3AF" keyboardType="number-pad" value={desiredIncome} onChangeText={setDesiredIncome} />
           </View>
+          {submitted && incomeError ? <Text style={styles.errorText}>{incomeError}</Text> : null}
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Where do you plan to retire?</Text>
-          <TextInput style={styles.input} placeholder="Mumbai, Pune, Goa..." placeholderTextColor="#9CA3AF" value={retirementCity} onChangeText={setRetirementCity} autoCapitalize="words" />
+          <Text style={styles.label}>Where do you plan to retire? *</Text>
+          <TextInput style={[styles.input, submitted && cityError ? styles.inputError : null]} placeholder="Mumbai, Pune, Goa..." placeholderTextColor="#9CA3AF" value={retirementCity} onChangeText={setRetirementCity} autoCapitalize="words" />
+          {submitted && cityError ? <Text style={styles.errorText}>{cityError}</Text> : null}
         </View>
 
-        <TouchableOpacity style={[styles.button, !isValid && styles.buttonDisabled]} onPress={handleNext} disabled={!isValid}>
+        <TouchableOpacity style={[styles.button, submitted && !isValid && styles.buttonDisabled]} onPress={handleNext} disabled={false}>
           <Text style={styles.buttonText}>Continue →</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -100,7 +119,10 @@ const styles = StyleSheet.create({
   ageText: { fontSize: 15, color: '#6B7280', fontWeight: '600' },
   ageTextSelected: { color: '#1B4332' },
   input: { borderWidth: 1.5, borderColor: '#D1D5DB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#111827' },
+  inputError: { borderColor: '#EF4444' },
   inputRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#D1D5DB', borderRadius: 12, overflow: 'hidden' },
+  inputRowError: { borderColor: '#EF4444' },
+  errorText: { fontSize: 12, color: '#EF4444', marginTop: 2 },
   rupee: { paddingHorizontal: 14, paddingVertical: 12, fontSize: 17, color: '#6B7280', backgroundColor: '#F9FAFB', borderRightWidth: 1, borderRightColor: '#D1D5DB' },
   inputFlex: { flex: 1, paddingHorizontal: 14, paddingVertical: 12, fontSize: 17, color: '#111827' },
   button: { backgroundColor: '#1B4332', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },

@@ -155,10 +155,8 @@ export function AppNavigator() {
 
   return (
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
+      {!isAuthenticated || !isOnboardingComplete ? (
         <RootStack.Screen name="Onboarding" component={OnboardingNavigator} />
-      ) : !isOnboardingComplete ? (
-        <RootStack.Screen name="OnboardingProfile" component={OnboardingNavigator} />
       ) : (
         <RootStack.Screen name="Main" component={MainStackNavigator} />
       )}
