@@ -19,6 +19,7 @@ datasource db {
 // ConsentType: data_processing | analytics | marketing
 // SubscriptionOrderStatus: pending | paid | failed
 // MfImportStatus: pending | parsed | confirmed | failed
+// DematSyncStatus: pending | parsed | confirmed | failed
 // Platform: ios | android | web
 // NotificationType: drift_alert | tax_reminder
 // NotificationStatus: sent | failed
@@ -46,6 +47,7 @@ model User {
   otpRecords             OtpRecord[]
   subscriptionOrders     SubscriptionOrder[]
   mfImportSessions       MfImportSession[]
+  dematSyncSessions      DematSyncSession[]
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -320,4 +322,22 @@ model MfImportSession {
 
   @@index([userId, createdAt])
   @@map("mf_import_sessions")
+}
+
+model DematSyncSession {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  fileName     String    @map("file_name")
+  depository   String    @default("unknown") // cdsl | nsdl | unknown
+  status       String    @default("pending") // pending | parsed | confirmed | failed
+  parsedData   String    @map("parsed_data")  // JSON — array of ParsedEquityHolding
+  holdingCount Int       @default(0) @map("holding_count")
+  importedAt   DateTime? @map("imported_at")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("demat_sync_sessions")
 }

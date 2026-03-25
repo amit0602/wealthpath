@@ -130,6 +130,17 @@ export const mfImportApi = {
   getSessions: () => api.get('/mf-import/sessions'),
 };
 
+// Demat Sync
+export const dematSyncApi = {
+  upload: (formData: FormData) =>
+    api.post('/demat-sync/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  confirm: (sessionId: string, holdings: any[]) =>
+    api.post('/demat-sync/confirm', { sessionId, holdings }),
+  getSessions: () => api.get('/demat-sync/sessions'),
+};
+
 // Notifications
 export const notificationsApi = {
   registerToken: (token: string, platform: 'ios' | 'android' | 'web') =>
