@@ -10,6 +10,7 @@ import { TaxModule } from './modules/tax/tax.module';
 import { HealthScoreModule } from './modules/health-score/health-score.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { MfImportModule } from './modules/mf-import/mf-import.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     HealthScoreModule,
     SubscriptionsModule,
     NotificationsModule,
+    MfImportModule,
   ],
 })
 export class AppModule {}
