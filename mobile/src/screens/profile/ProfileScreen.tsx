@@ -5,11 +5,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usersApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { exportPdfReport } from '../../utils/generateReport';
 import { MainStackParams } from '../../navigation/AppNavigator';
 
 export function ProfileScreen() {
   const [user, setUser] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
+  const [exporting, setExporting] = useState(false);
   const { logout } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
 
@@ -18,6 +20,17 @@ export function ProfileScreen() {
       usersApi.getMe().then(({ data }) => setUser(data)).catch(console.error);
     }, []),
   );
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      await exportPdfReport();
+    } catch {
+      Alert.alert('Export Failed', 'Could not generate the report. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleDelete = () => {
     Alert.alert(
@@ -54,9 +67,14 @@ export function ProfileScreen() {
             <View>
               <Text style={styles.name}>{user.fullName || 'Complete your profile'}</Text>
               <Text style={styles.phone}>{user.phoneNumber}</Text>
-              <View style={[styles.planBadge, user.subscription?.plan === 'premium' && styles.planBadgePremium]}>
-                <Text style={styles.planText}>{user.subscription?.plan === 'premium' ? '⭐ Premium' : 'Free Plan'}</Text>
-              </View>
+              <TouchableOpacity
+                style={[styles.planBadge, user.subscription?.plan === 'premium' && styles.planBadgePremium]}
+                onPress={() => navigation.navigate('Subscription')}
+              >
+                <Text style={styles.planText}>
+                  {user.subscription?.plan === 'premium' ? '⭐ Premium' : 'Free Plan — Upgrade ›'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -96,7 +114,29 @@ export function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>Reports & Data</Text>
+
+          <TouchableOpacity
+            style={[styles.exportButton, exporting && styles.exportButtonDisabled]}
+            onPress={handleExport}
+            disabled={exporting}
+          >
+            {exporting ? (
+              <View style={styles.exportInner}>
+                <Text style={styles.exportButtonText}>Generating PDF…</Text>
+              </View>
+            ) : (
+              <View style={styles.exportInner}>
+                <Text style={styles.exportIcon}>📄</Text>
+                <View>
+                  <Text style={styles.exportButtonText}>Export PDF Report</Text>
+                  <Text style={styles.exportButtonSub}>FIRE plan · Portfolio · Tax comparison</Text>
+                </View>
+                <Text style={styles.chevron}>›</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('NotificationPreferences')}>
             <View>
               <Text style={styles.settingLabel}>🔔 Notification Preferences</Text>
@@ -104,8 +144,9 @@ export function ProfileScreen() {
             </View>
             <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
+
           {[
-            { label: '📊 Export My Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
+            { label: '📊 Export Raw Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
             { label: '🔒 Security Log', subtitle: 'View recent login activity', action: () => {} },
           ].map(({ label, subtitle, action }) => (
             <TouchableOpacity key={label} style={styles.settingRow} onPress={action}>
@@ -156,6 +197,12 @@ const styles = StyleSheet.create({
   settingLabel: { fontSize: 15, color: '#111827' },
   settingSubtitle: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
   chevron: { fontSize: 20, color: '#9CA3AF' },
+  exportButton: { backgroundColor: '#1B4332', borderRadius: 12, padding: 14 },
+  exportButtonDisabled: { opacity: 0.6 },
+  exportInner: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  exportIcon: { fontSize: 22 },
+  exportButtonText: { fontSize: 15, fontWeight: '700', color: '#fff', flex: 1 },
+  exportButtonSub: { fontSize: 11, color: '#6EE7B7', marginTop: 2 },
   logoutButton: { backgroundColor: '#F3F4F6', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
   logoutText: { fontSize: 16, fontWeight: '600', color: '#374151' },
   deleteButton: { borderRadius: 12, paddingVertical: 14, alignItems: 'center' },

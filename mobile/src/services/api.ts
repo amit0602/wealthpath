@@ -109,6 +109,16 @@ export const healthScoreApi = {
   getLatest: () => api.get('/health-score/latest'),
 };
 
+// Subscriptions
+export const subscriptionsApi = {
+  getMe: () => api.get('/subscriptions/me'),
+  createOrder: (plan: 'monthly' | 'annual') => api.post('/subscriptions/create-order', { plan }),
+  verifyPayment: (data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
+    api.post('/subscriptions/verify-payment', data),
+  cancel: () => api.post('/subscriptions/cancel'),
+  devActivate: (plan: 'monthly' | 'annual') => api.post('/subscriptions/dev-activate', { plan }),
+};
+
 // Notifications
 export const notificationsApi = {
   registerToken: (token: string, platform: 'ios' | 'android' | 'web') =>

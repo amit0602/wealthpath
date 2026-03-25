@@ -17,6 +17,7 @@ datasource db {
 // SubscriptionPlan: free | premium
 // SubscriptionStatus: active | cancelled | expired | paused
 // ConsentType: data_processing | analytics | marketing
+// SubscriptionOrderStatus: pending | paid | failed
 // Platform: ios | android | web
 // NotificationType: drift_alert | tax_reminder
 // NotificationStatus: sent | failed
@@ -42,6 +43,7 @@ model User {
   consentRecords         ConsentRecord[]
   auditLogs              AuditLog[]
   otpRecords             OtpRecord[]
+  subscriptionOrders     SubscriptionOrder[]
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -204,9 +206,27 @@ model Subscription {
   cancelledAt DateTime? @map("cancelled_at")
   createdAt   DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionOrders SubscriptionOrder[]
 
   @@map("subscriptions")
+}
+
+model SubscriptionOrder {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  subscriptionId    String   @map("subscription_id")
+  razorpayOrderId   String   @unique @map("razorpay_order_id")
+  razorpayPaymentId String?  @map("razorpay_payment_id")
+  plan              String   // monthly | annual
+  amountPaise       Int      @map("amount_paise")
+  status            String   @default("pending") @map("status")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("subscription_orders")
 }
 
 model ConsentRecord {
