@@ -321,7 +321,13 @@ export async function exportPdfReport(): Promise<void> {
   };
 
   const html = buildHtml(data);
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+
+  let uri: string;
+  try {
+    ({ uri } = await Print.printToFileAsync({ html, base64: false }));
+  } catch {
+    throw new Error('Failed to generate PDF. Please try again.');
+  }
 
   const canShare = await Sharing.isAvailableAsync();
   if (canShare) {

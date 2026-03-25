@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fireApi } from '../../services/api';
@@ -22,7 +23,7 @@ const formatDelta = (val: number, prefix = '') => {
   const abs = Math.abs(val);
   const sign = val >= 0 ? '+' : '−';
   if (abs >= 10000000) return `${sign}${prefix}${(abs / 10000000).toFixed(2)} Cr`;
-  if (abs >= 100000) return `${prefix}${sign}${(abs / 100000).toFixed(1)} L`;
+  if (abs >= 100000) return `${sign}${prefix}${(abs / 100000).toFixed(1)} L`;
   return `${sign}${prefix}${abs.toLocaleString('en-IN')}`;
 };
 
@@ -70,8 +71,8 @@ export function FIREScreen() {
     try {
       const { data } = await fireApi.calculate(buildPayload(overrides));
       setResult(data);
-    } catch (e: any) {
-      console.error(e?.response?.data);
+    } catch {
+      Alert.alert('Error', 'Could not calculate FIRE projection. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -92,15 +93,15 @@ export function FIREScreen() {
         payload.targetRetirementAge = Math.max(40, Math.min(70, Math.round(baseAge + wi.retireAgeDelta)));
       }
       if (wi.returnDelta !== 0) {
-        const baseReturn = ov.retirementAge ? null : result;
-        // default 12% pre-retirement return + delta
-        const currentReturn = 0.12;
+        // Use actual pre-retirement return from last calculation, fallback to 12%
+        const inputs = result?.calculationInputs ? JSON.parse(result.calculationInputs) : null;
+        const currentReturn = inputs?.expectedReturnPre ?? 0.12;
         payload.expectedReturnPre = Math.max(0.04, Math.min(0.20, currentReturn + wi.returnDelta / 100));
       }
       const { data } = await fireApi.calculate(payload);
       setWhatIfResult(data);
-    } catch (e: any) {
-      console.error(e?.response?.data);
+    } catch {
+      // What-if errors are non-critical; don't alert — just leave previous result
     } finally {
       setWhatIfLoading(false);
     }
