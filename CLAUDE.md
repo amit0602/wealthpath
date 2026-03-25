@@ -265,6 +265,24 @@ subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST
 
 ---
 
+### Phase 3 — Product Improvements (prioritised)
+
+#### P1 — Fix gaps that actively hurt the experience
+1. **Insurance input & health score fix** — add an InsuranceScreen where users enter term cover amount, health cover, and annual premium; wire into the health score so the insurance dimension can score above 50; `InsuranceCover` model on backend; fixes the "Insurance data not connected" dead end
+2. **80C optimizer** — UI to enter PPF contributions, ELSS, insurance premiums, home loan principal; show exact 80C room remaining and rank instruments by tax efficiency; connect to the Tax Planner's `section80cRemaining` field which already exists but has no input surface
+3. **Corpus gap framing** — reframe the Dashboard red `-₹X Cr` gap as a positive actionable target ("Invest ₹28,936/mo to reach your FIRE goal") to reduce anxiety and improve retention; the scary deficit number should be secondary
+
+#### P2 — High-value new features
+4. **Goal-based planner** — users define 2–3 financial goals alongside FIRE (e.g. "Buy house in 5 years — need ₹40L", "Child's education in 8 years — need ₹25L"); each goal gets a corpus target, timeline, and dedicated SIP calculation; `FinancialGoal` model on backend; new Goals tab or section under FIRE Calculator
+5. **Net worth timeline chart** — monthly portfolio value stored as a snapshot on each recalculation; render as a line chart (last 6–12 months); the single most motivating retention feature in any personal finance app; `PortfolioSnapshot` model on backend
+6. **Emergency fund tracker** — dedicated screen to set a target (e.g. 6× monthly expenses), track current liquid savings, show progress bar and shortfall; the health score already penalises users for this but there's no way to fix it in the app
+
+#### P3 — Depth features
+7. **Debt payoff screen** — list each loan (home, car, personal) with outstanding balance, interest rate, and remaining tenure; show "pay this off first" recommendation (highest-rate first = avalanche method) with projected interest saved; `Loan` model on backend
+8. **SIP vs lump sum clarity** — in investment cards distinguish between monthly SIP contributions and existing corpus clearly; a ₹12L MF with ₹25K/mo SIP is very different from a ₹12L FD sitting idle; affects how FIRE gap is communicated
+
+---
+
 ## Running Locally
 
 ```bash
