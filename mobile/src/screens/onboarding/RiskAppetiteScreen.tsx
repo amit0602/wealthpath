@@ -64,13 +64,16 @@ const getRiskProfile = (totalScore: number): { profile: string; description: str
 
 export function RiskAppetiteScreen() {
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [submitted, setSubmitted] = useState(false);
   const { setOnboardingComplete } = useAuthStore();
 
   const allAnswered = QUESTIONS.every((q) => answers[q.id] !== undefined);
   const totalScore = Object.values(answers).reduce((s, v) => s + v, 0);
   const riskResult = allAnswered ? getRiskProfile(totalScore) : null;
+  const unansweredCount = QUESTIONS.filter((q) => answers[q.id] === undefined).length;
 
   const handleFinish = async () => {
+    setSubmitted(true);
     if (!riskResult) return;
     try {
       await usersApi.updateFinancialProfile({ riskAppetite: riskResult.profile });
@@ -114,7 +117,13 @@ export function RiskAppetiteScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={[styles.button, !allAnswered && styles.buttonDisabled]} onPress={handleFinish} disabled={!allAnswered}>
+        {submitted && !allAnswered ? (
+          <Text style={styles.errorText}>
+            Please answer {unansweredCount === 1 ? '1 remaining question' : `all ${unansweredCount} remaining questions`} to continue
+          </Text>
+        ) : null}
+
+        <TouchableOpacity style={[styles.button, submitted && !allAnswered && styles.buttonDisabled]} onPress={handleFinish} disabled={false}>
           <Text style={styles.buttonText}>Complete Setup 🎉</Text>
         </TouchableOpacity>
 
@@ -144,6 +153,7 @@ const styles = StyleSheet.create({
   result: { borderWidth: 2, borderRadius: 12, padding: 16, gap: 6 },
   resultProfile: { fontSize: 18, fontWeight: '700' },
   resultDesc: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  errorText: { fontSize: 13, color: '#EF4444', textAlign: 'center' },
   button: { backgroundColor: '#1B4332', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
   buttonDisabled: { backgroundColor: '#9CA3AF' },
   buttonText: { fontSize: 17, fontWeight: '700', color: '#fff' },

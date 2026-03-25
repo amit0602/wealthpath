@@ -8,13 +8,21 @@ type Props = NativeStackScreenProps<OnboardingStackParams, 'PhoneEntry'>;
 
 export function PhoneEntryScreen({ navigation }: Props) {
   const [phone, setPhone] = useState('');
+  const [touched, setTouched] = useState(false);
   const [loading, setLoading] = useState(false);
   const { sendOtp } = useAuthStore();
 
   const fullPhone = `+91${phone}`;
   const isValid = /^[6-9]\d{9}$/.test(phone);
 
+  const phoneError = touched && phone.length > 0 && !isValid
+    ? 'Enter a valid 10-digit mobile number starting with 6–9'
+    : touched && phone.length === 0
+    ? 'Mobile number is required'
+    : null;
+
   const handleSend = async () => {
+    setTouched(true);
     if (!isValid) return;
     setLoading(true);
     try {
@@ -48,10 +56,11 @@ export function PhoneEntryScreen({ navigation }: Props) {
             keyboardType="number-pad"
             maxLength={10}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(v) => { setPhone(v); setTouched(true); }}
             autoFocus
           />
         </View>
+        {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
 
         <TouchableOpacity
           style={[styles.button, !isValid && styles.buttonDisabled]}
@@ -79,4 +88,5 @@ const styles = StyleSheet.create({
   button: { backgroundColor: '#1B4332', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 24 },
   buttonDisabled: { backgroundColor: '#9CA3AF' },
   buttonText: { fontSize: 17, fontWeight: '700', color: '#fff' },
+  errorText: { fontSize: 12, color: '#EF4444', marginTop: 6 },
 });

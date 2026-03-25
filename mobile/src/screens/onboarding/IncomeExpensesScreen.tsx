@@ -12,10 +12,25 @@ export function IncomeExpensesScreen({ navigation }: Props) {
   const [expenses, setExpenses] = useState('');
   const [emi, setEmi] = useState('0');
   const [dependents, setDependents] = useState('0');
+  const [submitted, setSubmitted] = useState(false);
 
-  const isValid = grossIncome && takeHome && expenses;
+  const grossError = !grossIncome || Number(grossIncome) <= 0
+    ? 'Monthly gross income is required and must be greater than 0'
+    : null;
+  const takeHomeError = !takeHome || Number(takeHome) <= 0
+    ? 'Monthly take-home is required and must be greater than 0'
+    : grossIncome && Number(takeHome) > Number(grossIncome)
+    ? 'Take-home cannot exceed gross income'
+    : null;
+  const expensesError = !expenses || Number(expenses) <= 0
+    ? 'Monthly expenses are required and must be greater than 0'
+    : null;
+
+  const isValid = !grossError && !takeHomeError && !expensesError;
 
   const handleNext = async () => {
+    setSubmitted(true);
+    if (!isValid) return;
     try {
       await usersApi.updateFinancialProfile({
         monthlyGrossIncome: Number(grossIncome),
@@ -40,31 +55,55 @@ export function IncomeExpensesScreen({ navigation }: Props) {
           <Text style={styles.subtitle}>All amounts in ₹ per month</Text>
         </View>
 
-        {[
-          { label: 'Monthly Gross Income', value: grossIncome, setter: setGrossIncome, hint: 'Before tax deductions' },
-          { label: 'Monthly Take-Home', value: takeHome, setter: setTakeHome, hint: 'After tax and PF' },
-          { label: 'Monthly Expenses', value: expenses, setter: setExpenses, hint: 'Rent, food, utilities, etc.' },
-          { label: 'Monthly EMI Obligations', value: emi, setter: setEmi, hint: 'Home loan, car loan, etc.' },
-          { label: 'Number of Dependents', value: dependents, setter: setDependents, hint: 'Spouse, kids, parents' },
-        ].map(({ label, value, setter, hint }) => (
-          <View key={label} style={styles.field}>
-            <Text style={styles.label}>{label}</Text>
-            <Text style={styles.hint}>{hint}</Text>
-            <View style={styles.inputRow}>
-              <Text style={styles.rupee}>₹</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="0"
-                placeholderTextColor="#9CA3AF"
-                keyboardType="number-pad"
-                value={value}
-                onChangeText={setter}
-              />
-            </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>Monthly Gross Income *</Text>
+          <Text style={styles.hint}>Before tax deductions</Text>
+          <View style={[styles.inputRow, submitted && grossError ? styles.inputRowError : null]}>
+            <Text style={styles.rupee}>₹</Text>
+            <TextInput style={styles.input} placeholder="0" placeholderTextColor="#9CA3AF" keyboardType="number-pad" value={grossIncome} onChangeText={setGrossIncome} />
           </View>
-        ))}
+          {submitted && grossError ? <Text style={styles.errorText}>{grossError}</Text> : null}
+        </View>
 
-        <TouchableOpacity style={[styles.button, !isValid && styles.buttonDisabled]} onPress={handleNext} disabled={!isValid}>
+        <View style={styles.field}>
+          <Text style={styles.label}>Monthly Take-Home *</Text>
+          <Text style={styles.hint}>After tax and PF</Text>
+          <View style={[styles.inputRow, submitted && takeHomeError ? styles.inputRowError : null]}>
+            <Text style={styles.rupee}>₹</Text>
+            <TextInput style={styles.input} placeholder="0" placeholderTextColor="#9CA3AF" keyboardType="number-pad" value={takeHome} onChangeText={setTakeHome} />
+          </View>
+          {submitted && takeHomeError ? <Text style={styles.errorText}>{takeHomeError}</Text> : null}
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Monthly Expenses *</Text>
+          <Text style={styles.hint}>Rent, food, utilities, etc.</Text>
+          <View style={[styles.inputRow, submitted && expensesError ? styles.inputRowError : null]}>
+            <Text style={styles.rupee}>₹</Text>
+            <TextInput style={styles.input} placeholder="0" placeholderTextColor="#9CA3AF" keyboardType="number-pad" value={expenses} onChangeText={setExpenses} />
+          </View>
+          {submitted && expensesError ? <Text style={styles.errorText}>{expensesError}</Text> : null}
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Monthly EMI Obligations</Text>
+          <Text style={styles.hint}>Home loan, car loan, etc.</Text>
+          <View style={styles.inputRow}>
+            <Text style={styles.rupee}>₹</Text>
+            <TextInput style={styles.input} placeholder="0" placeholderTextColor="#9CA3AF" keyboardType="number-pad" value={emi} onChangeText={setEmi} />
+          </View>
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Number of Dependents</Text>
+          <Text style={styles.hint}>Spouse, kids, parents</Text>
+          <View style={styles.inputRow}>
+            <Text style={styles.rupee}>₹</Text>
+            <TextInput style={styles.input} placeholder="0" placeholderTextColor="#9CA3AF" keyboardType="number-pad" value={dependents} onChangeText={setDependents} />
+          </View>
+        </View>
+
+        <TouchableOpacity style={[styles.button, submitted && !isValid && styles.buttonDisabled]} onPress={handleNext} disabled={false}>
           <Text style={styles.buttonText}>Continue →</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -85,6 +124,8 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600', color: '#374151' },
   hint: { fontSize: 12, color: '#9CA3AF' },
   inputRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: '#D1D5DB', borderRadius: 12, overflow: 'hidden' },
+  inputRowError: { borderColor: '#EF4444' },
+  errorText: { fontSize: 12, color: '#EF4444', marginTop: 2 },
   rupee: { paddingHorizontal: 14, paddingVertical: 12, fontSize: 17, color: '#6B7280', backgroundColor: '#F9FAFB', borderRightWidth: 1, borderRightColor: '#D1D5DB' },
   input: { flex: 1, paddingHorizontal: 14, paddingVertical: 12, fontSize: 17, color: '#111827' },
   button: { backgroundColor: '#1B4332', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 8 },
