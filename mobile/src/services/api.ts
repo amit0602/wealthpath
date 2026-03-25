@@ -119,6 +119,17 @@ export const subscriptionsApi = {
   devActivate: (plan: 'monthly' | 'annual') => api.post('/subscriptions/dev-activate', { plan }),
 };
 
+// MF Import
+export const mfImportApi = {
+  upload: (formData: FormData) =>
+    api.post('/mf-import/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  confirm: (sessionId: string, holdings: any[]) =>
+    api.post('/mf-import/confirm', { sessionId, holdings }),
+  getSessions: () => api.get('/mf-import/sessions'),
+};
+
 // Notifications
 export const notificationsApi = {
   registerToken: (token: string, platform: 'ios' | 'android' | 'web') =>

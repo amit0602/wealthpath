@@ -61,15 +61,23 @@ export function InvestmentsScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} />}
       >
-        {/* Header row with title and Add button */}
+        {/* Header row with title and Add / Import buttons */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>Investments</Text>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate('EditInvestment', {})}
-          >
-            <Text style={styles.addButtonText}>+ Add</Text>
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.importButton}
+              onPress={() => navigation.navigate('MfImport')}
+            >
+              <Text style={styles.importButtonText}>↑ Import</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate('EditInvestment', {})}
+            >
+              <Text style={styles.addButtonText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {summary && (
@@ -153,6 +161,16 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 14, paddingBottom: 32 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  headerButtons: { flexDirection: 'row', gap: 8 },
+  importButton: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#1B4332',
+  },
+  importButtonText: { fontSize: 14, fontWeight: '700', color: '#1B4332' },
   addButton: {
     backgroundColor: '#1B4332',
     borderRadius: 10,
