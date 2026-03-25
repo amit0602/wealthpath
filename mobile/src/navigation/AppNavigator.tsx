@@ -27,6 +27,7 @@ import { EditInvestmentScreen } from '../screens/investments/EditInvestmentScree
 import { SubscriptionScreen } from '../screens/profile/SubscriptionScreen';
 import { NotificationPreferencesScreen } from '../screens/profile/NotificationPreferencesScreen';
 import { MfImportScreen } from '../screens/investments/MfImportScreen';
+import { DematSyncScreen } from '../screens/investments/DematSyncScreen';
 
 export type OnboardingStackParams = {
   Welcome: undefined;
@@ -56,6 +57,7 @@ export type MainStackParams = {
   Subscription: undefined;
   NotificationPreferences: undefined;
   MfImport: undefined;
+  DematSync: undefined;
 };
 
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
@@ -113,6 +115,7 @@ function MainStackNavigator() {
       <MainStack.Screen name="Subscription" component={SubscriptionScreen} />
       <MainStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} />
       <MainStack.Screen name="MfImport" component={MfImportScreen} />
+      <MainStack.Screen name="DematSync" component={DematSyncScreen} />
     </MainStack.Navigator>
   );
 }

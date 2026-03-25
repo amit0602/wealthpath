@@ -11,6 +11,7 @@ import { HealthScoreModule } from './modules/health-score/health-score.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MfImportModule } from './modules/mf-import/mf-import.module';
+import { DematSyncModule } from './modules/demat-sync/demat-sync.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { MfImportModule } from './modules/mf-import/mf-import.module';
     SubscriptionsModule,
     NotificationsModule,
     MfImportModule,
+    DematSyncModule,
   ],
 })
 export class AppModule {}

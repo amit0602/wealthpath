@@ -67,9 +67,15 @@ export function InvestmentsScreen() {
           <View style={styles.headerButtons}>
             <TouchableOpacity
               style={styles.importButton}
+              onPress={() => navigation.navigate('DematSync')}
+            >
+              <Text style={styles.importButtonText}>⟳ Demat</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.importButton}
               onPress={() => navigation.navigate('MfImport')}
             >
-              <Text style={styles.importButtonText}>↑ Import</Text>
+              <Text style={styles.importButtonText}>↑ MF</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.addButton}
