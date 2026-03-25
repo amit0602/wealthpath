@@ -21,26 +21,26 @@ export class NotificationsController {
 
   @Post('token')
   registerToken(@Request() req: any, @Body() dto: RegisterTokenDto) {
-    return this.notificationsService.registerToken(req.user.sub, dto);
+    return this.notificationsService.registerToken(req.user.userId, dto);
   }
 
   @Delete('token')
   deregisterToken(@Request() req: any, @Query('token') token: string) {
-    return this.notificationsService.deregisterToken(req.user.sub, token);
+    return this.notificationsService.deregisterToken(req.user.userId, token);
   }
 
   @Get('preferences')
   getPreferences(@Request() req: any) {
-    return this.notificationsService.getPreferences(req.user.sub);
+    return this.notificationsService.getPreferences(req.user.userId);
   }
 
   @Put('preferences')
   updatePreferences(@Request() req: any, @Body() dto: UpdatePreferencesDto) {
-    return this.notificationsService.updatePreferences(req.user.sub, dto);
+    return this.notificationsService.updatePreferences(req.user.userId, dto);
   }
 
   @Get('logs')
   getNotificationLogs(@Request() req: any) {
-    return this.notificationsService.getNotificationLogs(req.user.sub);
+    return this.notificationsService.getNotificationLogs(req.user.userId);
   }
 }
