@@ -50,6 +50,7 @@ model User {
   dematSyncSessions      DematSyncSession[]
   insuranceCover         InsuranceCover?
   financialGoals         FinancialGoal[]
+  portfolioSnapshots     PortfolioSnapshot[]
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -376,4 +377,18 @@ model InsuranceCover {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("insurance_covers")
+}
+
+model PortfolioSnapshot {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  totalCorpus  Float    @map("total_corpus")
+  snapshotDate String   @map("snapshot_date") // YYYY-MM-DD — one record per day
+  recordedAt   DateTime @default(now()) @map("recorded_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snapshotDate])
+  @@index([userId, snapshotDate])
+  @@map("portfolio_snapshots")
 }

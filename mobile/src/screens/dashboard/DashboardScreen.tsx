@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, RefreshControl, useWindowDimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { fireApi, healthScoreApi, investmentsApi } from '../../services/api';
+import { NetWorthChart } from '../../components/NetWorthChart';
 
 const formatCrore = (val: number) => {
   if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
@@ -10,22 +11,26 @@ const formatCrore = (val: number) => {
 };
 
 export function DashboardScreen() {
+  const { width } = useWindowDimensions();
   const [fire, setFire] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
   const [allocation, setAllocation] = useState<any>(null);
+  const [snapshots, setSnapshots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
     try {
-      const [fireRes, healthRes, allocRes] = await Promise.allSettled([
+      const [fireRes, healthRes, allocRes, snapshotRes] = await Promise.allSettled([
         fireApi.calculate(),
         healthScoreApi.calculate(),
         investmentsApi.getAllocation(),
+        investmentsApi.getSnapshots(),
       ]);
       if (fireRes.status === 'fulfilled') setFire(fireRes.value.data);
       if (healthRes.status === 'fulfilled') setHealth(healthRes.value.data);
       if (allocRes.status === 'fulfilled') setAllocation(allocRes.value.data);
+      if (snapshotRes.status === 'fulfilled') setSnapshots(snapshotRes.value.data);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -41,6 +46,16 @@ export function DashboardScreen() {
   const corpusRequired = fire ? Number(fire.corpusRequired) : 0;
   const corpusFv = fire ? Number(fire.currentCorpusFutureValue) : 0;
   const progressPct = corpusRequired > 0 ? Math.min((corpusFv / corpusRequired) * 100, 100) : 0;
+
+  // Net worth trend (first vs last snapshot)
+  const hasChart = snapshots.length >= 2;
+  const firstSnap = snapshots[0]?.totalCorpus ?? 0;
+  const lastSnap = snapshots[snapshots.length - 1]?.totalCorpus ?? 0;
+  const trendPct = firstSnap > 0 ? ((lastSnap - firstSnap) / firstSnap) * 100 : 0;
+  const isUp = trendPct >= 0;
+
+  // Chart width = card width = screen - 2*padding - 2*card-padding
+  const chartWidth = width - 40 - 32;
 
   if (loading) {
     return (
@@ -121,11 +136,23 @@ export function DashboardScreen() {
           </View>
         )}
 
-        {/* Portfolio */}
+        {/* Portfolio + Net Worth Timeline */}
         {allocation && (
           <View style={styles.card}>
-            <Text style={styles.cardLabel}>Total Portfolio</Text>
-            <Text style={styles.portfolioValue}>{formatCrore(Number(allocation.totalCorpus))}</Text>
+            <View style={styles.portfolioHeader}>
+              <View>
+                <Text style={styles.cardLabel}>Total Portfolio</Text>
+                <Text style={styles.portfolioValue}>{formatCrore(Number(allocation.totalCorpus))}</Text>
+              </View>
+              {hasChart && (
+                <View style={[styles.trendBadge, { backgroundColor: isUp ? '#D1FAE5' : '#FEE2E2' }]}>
+                  <Text style={[styles.trendText, { color: isUp ? '#065F46' : '#991B1B' }]}>
+                    {isUp ? '▲' : '▼'} {Math.abs(trendPct).toFixed(1)}%
+                  </Text>
+                </View>
+              )}
+            </View>
+
             <View style={styles.allocationRow}>
               {Object.entries(allocation.allocation).map(([key, val]: any) => (
                 val.percentage > 0 && (
@@ -135,6 +162,12 @@ export function DashboardScreen() {
                   </View>
                 )
               ))}
+            </View>
+
+            {/* Net worth chart */}
+            <View style={styles.chartSection}>
+              <Text style={styles.chartLabel}>Net Worth Timeline</Text>
+              <NetWorthChart snapshots={snapshots} width={chartWidth} />
             </View>
           </View>
         )}
@@ -173,10 +206,15 @@ const styles = StyleSheet.create({
   sipHint: { fontSize: 11, color: '#6B7280', marginTop: 2 },
   sipValue: { fontSize: 18, fontWeight: '800', color: '#1B4332' },
   sipValueGreen: { fontSize: 16, fontWeight: '700', color: '#10B981' },
-  portfolioValue: { fontSize: 28, fontWeight: '800', color: '#111827' },
+  portfolioHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
+  portfolioValue: { fontSize: 28, fontWeight: '800', color: '#111827', marginTop: 2 },
+  trendBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  trendText: { fontSize: 13, fontWeight: '700' },
   allocationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   allocationItem: { backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
   allocationLabel: { fontSize: 11, color: '#6B7280' },
   allocationPct: { fontSize: 14, fontWeight: '700', color: '#1B4332' },
+  chartSection: { gap: 6, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 10 },
+  chartLabel: { fontSize: 12, color: '#6B7280', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   disclaimer: { fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 16 },
 });
