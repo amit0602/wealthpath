@@ -85,11 +85,18 @@ RootStack
     │   ├── Tax Planner
     │   └── Profile
     └── Edit / detail screens (push on top of tabs)
-        ├── EditPersonal    (name, DOB, city, employment)
-        ├── EditFinancials  (income, expenses, EMI, dependents)
-        ├── EditGoals       (retirement age, desired income, city, risk)
-        ├── EditInvestment  (add or edit a single investment)
-        └── Subscription    (plan selection + Razorpay billing)
+        ├── EditPersonal      (name, DOB, city, employment)
+        ├── EditFinancials    (income, expenses, EMI, dependents)
+        ├── EditGoals         (retirement age, desired income, city, risk)
+        ├── EditInvestment    (add or edit a single investment)
+        ├── Subscription      (plan selection + Razorpay billing)
+        ├── InsuranceScreen   (term + health cover, sum assured, premium)
+        ├── EditTaxProfile    (salary, HRA, 80C/80D/80CCD(1B), home loan)
+        ├── Goals             (list all financial goals)
+        ├── EditGoal          (add or edit a single goal)
+        ├── EmergencyFund     (liquid savings tracker)
+        ├── DebtPayoff        (loan list, avalanche recommendation)
+        └── EditLoan          (add or edit a single loan)
 ```
 
 ### Key Files
@@ -115,6 +122,13 @@ healthScoreApi    → /health-score/calculate (POST), /health-score/latest (GET)
 subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST),
                     /subscriptions/verify-payment (POST), /subscriptions/cancel (POST),
                     /subscriptions/dev-activate (POST — dev only)
+insuranceApi      → /insurance/me (GET, PUT)
+goalsApi          → /goals (GET, POST), /goals/:id (PUT, DELETE)
+investmentsApi    → /investments (GET, POST), /investments/:id (PUT, DELETE),
+                    /investments/snapshots (GET — last 12 monthly net worth points)
+emergencyFundApi  → /emergency-fund/me (GET, PUT)
+loansApi          → /loans (GET, POST), /loans/:id (PUT, DELETE)
+taxApi            → /tax/comparison (GET), /tax/profile (GET, PUT)
 ```
 
 ---
@@ -234,7 +248,7 @@ subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST
 
 ---
 
-## Current Status (2026-03-25)
+## Current Status (2026-03-26)
 
 ### Phase 1 — Completed ✅
 - **Onboarding flow** — all 8 screens working end-to-end in web preview; inline form validation on all mandatory fields with red-border + error messages; post-OTP navigation bug fixed (new users now land on BasicProfile correctly)
@@ -256,30 +270,30 @@ subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST
 - **Razorpay Subscriptions** ✅ — `SubscriptionsModule`, `SubscriptionOrder` model, `PremiumGuard`, `SubscriptionScreen` with monthly/annual plan cards; dev-activate bypass for local testing (PR #5)
 - **Push Notifications** ✅ — `NotificationsModule`, `PushToken` + `NotificationPreference` + `NotificationLog` models, token registration/deregistration, preferences GET/PUT, notification log endpoint; daily drift alert cron (09:00 IST) with equity % vs risk-appetite target comparison; weekly 80C tax reminder cron (Monday 10:00 IST); Expo push delivery via `https://exp.host/--/api/v2/push/send` (PR #8)
 - **CAMS / KFintech MF Import** ✅ — `MfImportModule`, `MfImportSession` model, flexible CAS CSV parser (CAMS/KFintech/MFCentral), multipart upload endpoint, review + confirm upsert into `Investment`; 3-step mobile wizard with per-fund type override; `↑ Import` button on Investments tab (PR #12)
+- **CDSL / NSDL Demat Sync** ✅ — `DematSyncModule`, `DematSyncRequest` model, CAS CSV upload + parse + review + confirm upsert into `Investment`; Account Aggregator EQUITIES FI type preferred with direct CAS upload fallback (PR #14)
 
-### Phase 2 — Remaining (build in this order)
-1. **CDSL / NSDL Demat Sync** — via Account Aggregator EQUITIES FI type (preferred) or direct CAS upload fallback; `DematSyncRequest` model
-2. **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before production; `AaConsent` model; periodic Bull queue sync
+> **Regulatory note:** WealthPath is a personal finance dashboard — not an investment advisor. No SEBI RIA license is required. The only regulatory overhead remaining is FIU registration for Account Aggregator auto-sync, which is deferred until after the POC is validated.
 
-> **Regulatory note:** WealthPath is a personal finance dashboard — not an investment advisor. No SEBI RIA license is required. The only regulatory overhead in Phase 2 is FIU registration for Account Aggregator (Feature 2), which can be deferred until after Feature 1 is live and validated.
+### Phase 2 — Deferred
+- **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before production; `AaConsent` model; periodic Bull queue sync. Deferred pending FIU registration.
 
 ---
 
-### Phase 3 — Product Improvements (prioritised)
+### Phase 3 — Completed ✅
 
 #### P1 — Fix gaps that actively hurt the experience ✅
 1. **Insurance input & health score fix** ✅ — `InsuranceCover` model; `InsuranceModule` (GET/PUT `/insurance/me`); `InsuranceScreen` with term + health cover toggles, sum assured, premium fields; health score `scoreInsurance()` now uses real data (0–100 vs hardcoded 50); "Insurance Coverage" entry in Profile → Edit Details (PR #16)
 2. **80C optimizer** ✅ — `GET /tax/profile` endpoint added; `EditTaxProfileScreen` with salary, HRA, 80C manual input, 80D, 80CCD(1B), home loan interest; live 80C progress bar + "invest X more to max out" tip; "Edit Profile" button on Tax Planner screen (PR #16)
 3. **Corpus gap framing** ✅ — Dashboard FIRE card now shows "Invest ₹X/mo to reach your FIRE goal by age Y" as primary CTA; gap de-emphasised to secondary grey label; on-track state shows green confirmation (PR #16)
 
-#### P2 — High-value new features
-4. **Goal-based planner** — users define 2–3 financial goals alongside FIRE (e.g. "Buy house in 5 years — need ₹40L", "Child's education in 8 years — need ₹25L"); each goal gets a corpus target, timeline, and dedicated SIP calculation; `FinancialGoal` model on backend; new Goals tab or section under FIRE Calculator
-5. **Net worth timeline chart** — monthly portfolio value stored as a snapshot on each recalculation; render as a line chart (last 6–12 months); the single most motivating retention feature in any personal finance app; `PortfolioSnapshot` model on backend
-6. **Emergency fund tracker** — dedicated screen to set a target (e.g. 6× monthly expenses), track current liquid savings, show progress bar and shortfall; the health score already penalises users for this but there's no way to fix it in the app
+#### P2 — High-value new features ✅
+4. **Goal-based planner** ✅ — `FinancialGoal` model; `GoalsModule` (GET/POST/PUT/DELETE `/goals`); SIP calculation via annuity-due formula; `GoalsScreen` with icon auto-detection, progress bars, delete confirmation; `EditGoalScreen` with 7 quick-start presets; goals surface in FIRE Calculator tab (PR #17)
+5. **Net worth timeline chart** ✅ — `PortfolioSnapshot` model; daily snapshot upserted on every allocation fetch; `GET /investments/snapshots` returns last 12 monthly data points; custom SVG line chart (`NetWorthChart`) with trend badge on Dashboard (PR #18)
+6. **Emergency fund tracker** ✅ — `EmergencyFund` model; `EmergencyFundModule` (GET/PUT `/emergency-fund/me`); computed fields: months covered, target, shortfall, progress %; health score now uses real liquid savings; `EmergencyFundScreen` with target month selector, tip card, info card; entry in Profile → Edit Details (PR #19)
 
-#### P3 — Depth features
-7. **Debt payoff screen** — list each loan (home, car, personal) with outstanding balance, interest rate, and remaining tenure; show "pay this off first" recommendation (highest-rate first = avalanche method) with projected interest saved; `Loan` model on backend
-8. **SIP vs lump sum clarity** — in investment cards distinguish between monthly SIP contributions and existing corpus clearly; a ₹12L MF with ₹25K/mo SIP is very different from a ₹12L FD sitting idle; affects how FIRE gap is communicated
+#### P3 — Depth features ✅
+7. **Debt payoff screen** ✅ — `Loan` model; `LoansModule` (GET/POST/PUT/DELETE `/loans`); avalanche sort (highest rate first); enriched with `totalInterestPayable` + `payoffDate`; `DebtPayoffScreen` with summary card, avalanche tip, per-loan cards; `EditLoanScreen` with auto-calc EMI; freed-EMI nudge on loan deletion → navigates to EditFinancials; entry in Profile → Edit Details (PR #20)
+8. **SIP vs lump sum clarity** ✅ — `InvestmentCard` rewritten with 4 badge types: green SIP Active, blue Annual, amber Lump Sum · No active SIP (growth assets — call-to-action), neutral Lump Sum; portfolio summary shows active SIP count + monthly total alongside lump sum count (PR #21)
 
 ---
 
