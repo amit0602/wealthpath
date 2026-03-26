@@ -30,6 +30,8 @@ import { MfImportScreen } from '../screens/investments/MfImportScreen';
 import { DematSyncScreen } from '../screens/investments/DematSyncScreen';
 import { InsuranceScreen } from '../screens/profile/InsuranceScreen';
 import { EditTaxProfileScreen } from '../screens/tax/EditTaxProfileScreen';
+import { GoalsScreen } from '../screens/goals/GoalsScreen';
+import { EditGoalScreen } from '../screens/goals/EditGoalScreen';
 
 export type OnboardingStackParams = {
   Welcome: undefined;
@@ -62,6 +64,8 @@ export type MainStackParams = {
   DematSync: undefined;
   Insurance: undefined;
   EditTaxProfile: undefined;
+  Goals: undefined;
+  EditGoal: { goalId?: string };
 };
 
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
@@ -122,6 +126,8 @@ function MainStackNavigator() {
       <MainStack.Screen name="DematSync" component={DematSyncScreen} />
       <MainStack.Screen name="Insurance" component={InsuranceScreen} />
       <MainStack.Screen name="EditTaxProfile" component={EditTaxProfileScreen} />
+      <MainStack.Screen name="Goals" component={GoalsScreen} />
+      <MainStack.Screen name="EditGoal" component={EditGoalScreen} />
     </MainStack.Navigator>
   );
 }
