@@ -25,10 +25,11 @@ export class HealthScoreService {
   constructor(private prisma: PrismaService) {}
 
   async calculate(userId: string): Promise<HealthScoreResult> {
-    const [profile, investments, insuranceCover] = await Promise.all([
+    const [profile, investments, insuranceCover, emergencyFundRecord] = await Promise.all([
       this.prisma.financialProfile.findUnique({ where: { userId } }),
       this.prisma.investment.findMany({ where: { userId, isActive: true } }),
       this.prisma.insuranceCover.findUnique({ where: { userId } }),
+      this.prisma.emergencyFund.findUnique({ where: { userId } }),
     ]);
 
     const monthlyExpenses = profile ? Number(profile.monthlyExpenses) : 0;
@@ -37,11 +38,16 @@ export class HealthScoreService {
     const totalCorpus = investments.reduce((s, i) => s + Number(i.currentValue), 0);
     const monthlyContribution = investments.reduce((s, i) => s + Number(i.monthlyContribution), 0);
 
-    // 1. Emergency Fund: target = 6 months of expenses in liquid assets
-    const liquidAssets = investments
-      .filter(i => ['fd', 'rd', 'other'].includes(i.instrumentType))
-      .reduce((s, i) => s + Number(i.currentValue), 0);
-    const emergencyFundMonths = monthlyExpenses > 0 ? liquidAssets / monthlyExpenses : 0;
+    // 1. Emergency Fund: prefer real data from EmergencyFund record; fall back to FD/RD proxy
+    let liquidSavings: number;
+    if (emergencyFundRecord) {
+      liquidSavings = Number(emergencyFundRecord.liquidSavings);
+    } else {
+      liquidSavings = investments
+        .filter(i => ['fd', 'rd', 'other'].includes(i.instrumentType))
+        .reduce((s, i) => s + Number(i.currentValue), 0);
+    }
+    const emergencyFundMonths = monthlyExpenses > 0 ? liquidSavings / monthlyExpenses : 0;
     const emergencyFund = this.scoreEmergencyFund(emergencyFundMonths);
 
     // 2. Insurance: score based on actual cover data (if entered)

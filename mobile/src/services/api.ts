@@ -121,6 +121,13 @@ export const subscriptionsApi = {
   devActivate: (plan: 'monthly' | 'annual') => api.post('/subscriptions/dev-activate', { plan }),
 };
 
+// Emergency Fund
+export const emergencyFundApi = {
+  get: () => api.get('/emergency-fund/me'),
+  upsert: (data: { liquidSavings: number; targetMonths?: number }) =>
+    api.put('/emergency-fund/me', data),
+};
+
 // Insurance
 export const insuranceApi = {
   get: () => api.get('/insurance/me'),
