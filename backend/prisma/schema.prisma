@@ -52,6 +52,7 @@ model User {
   financialGoals         FinancialGoal[]
   portfolioSnapshots     PortfolioSnapshot[]
   emergencyFund          EmergencyFund?
+  loans                  Loan[]
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -405,4 +406,23 @@ model EmergencyFund {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("emergency_funds")
+}
+
+// LoanType: home | car | personal | education | other
+model Loan {
+  id                     String   @id @default(uuid())
+  userId                 String   @map("user_id")
+  name                   String                          // e.g. "Home Loan – HDFC"
+  loanType               String   @map("loan_type")     // home | car | personal | education | other
+  outstandingBalance     Float    @map("outstanding_balance")
+  interestRate           Float    @map("interest_rate") // annual % e.g. 8.5
+  remainingTenureMonths  Int      @map("remaining_tenure_months")
+  emiAmount              Float    @map("emi_amount")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("loans")
 }
