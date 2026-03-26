@@ -56,6 +56,18 @@ export function DebtPayoffScreen() {
               setLoans((l) => l.filter((x) => x.id !== loan.id));
               const { data } = await loansApi.list();
               setSummary(data.summary);
+              // Prompt user to redirect freed-up EMI to investments
+              Alert.alert(
+                '🎉 EMI Freed Up!',
+                `You've cleared "${loan.name}" and freed up ${formatINR(loan.emiAmount)}/mo.\n\nWant to redirect this to your investments? Update your monthly expenses in Edit Financials so your FIRE plan reflects this.`,
+                [
+                  { text: 'Later', style: 'cancel' },
+                  {
+                    text: 'Update Financials',
+                    onPress: () => navigation.navigate('EditFinancials'),
+                  },
+                ],
+              );
             } catch {
               Alert.alert('Error', 'Could not remove loan. Please try again.');
             }
