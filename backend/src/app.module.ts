@@ -15,6 +15,7 @@ import { DematSyncModule } from './modules/demat-sync/demat-sync.module';
 import { InsuranceModule } from './modules/insurance/insurance.module';
 import { GoalsModule } from './modules/goals/goals.module';
 import { EmergencyFundModule } from './modules/emergency-fund/emergency-fund.module';
+import { LoansModule } from './modules/loans/loans.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { EmergencyFundModule } from './modules/emergency-fund/emergency-fund.mod
     InsuranceModule,
     GoalsModule,
     EmergencyFundModule,
+    LoansModule,
   ],
 })
 export class AppModule {}

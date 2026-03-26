@@ -33,6 +33,8 @@ import { EditTaxProfileScreen } from '../screens/tax/EditTaxProfileScreen';
 import { GoalsScreen } from '../screens/goals/GoalsScreen';
 import { EditGoalScreen } from '../screens/goals/EditGoalScreen';
 import { EmergencyFundScreen } from '../screens/emergency-fund/EmergencyFundScreen';
+import { DebtPayoffScreen } from '../screens/loans/DebtPayoffScreen';
+import { EditLoanScreen } from '../screens/loans/EditLoanScreen';
 
 export type OnboardingStackParams = {
   Welcome: undefined;
@@ -68,6 +70,8 @@ export type MainStackParams = {
   Goals: undefined;
   EditGoal: { goalId?: string };
   EmergencyFund: undefined;
+  DebtPayoff: undefined;
+  EditLoan: { loanId?: string };
 };
 
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
@@ -131,6 +135,8 @@ function MainStackNavigator() {
       <MainStack.Screen name="Goals" component={GoalsScreen} />
       <MainStack.Screen name="EditGoal" component={EditGoalScreen} />
       <MainStack.Screen name="EmergencyFund" component={EmergencyFundScreen} />
+      <MainStack.Screen name="DebtPayoff" component={DebtPayoffScreen} />
+      <MainStack.Screen name="EditLoan" component={EditLoanScreen} />
     </MainStack.Navigator>
   );
 }

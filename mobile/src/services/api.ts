@@ -121,6 +121,20 @@ export const subscriptionsApi = {
   devActivate: (plan: 'monthly' | 'annual') => api.post('/subscriptions/dev-activate', { plan }),
 };
 
+// Loans
+export const loansApi = {
+  list: () => api.get('/loans'),
+  create: (data: {
+    name: string; loanType: string; outstandingBalance: number;
+    interestRate: number; remainingTenureMonths: number; emiAmount: number;
+  }) => api.post('/loans', data),
+  update: (id: string, data: {
+    name?: string; loanType?: string; outstandingBalance?: number;
+    interestRate?: number; remainingTenureMonths?: number; emiAmount?: number;
+  }) => api.put(`/loans/${id}`, data),
+  delete: (id: string) => api.delete(`/loans/${id}`),
+};
+
 // Emergency Fund
 export const emergencyFundApi = {
   get: () => api.get('/emergency-fund/me'),
