@@ -13,6 +13,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { MfImportModule } from './modules/mf-import/mf-import.module';
 import { DematSyncModule } from './modules/demat-sync/demat-sync.module';
 import { InsuranceModule } from './modules/insurance/insurance.module';
+import { GoalsModule } from './modules/goals/goals.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { InsuranceModule } from './modules/insurance/insurance.module';
     MfImportModule,
     DematSyncModule,
     InsuranceModule,
+    GoalsModule,
   ],
 })
 export class AppModule {}

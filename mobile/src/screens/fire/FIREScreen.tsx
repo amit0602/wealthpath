@@ -11,7 +11,10 @@ import {
   Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { fireApi } from '../../services/api';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { fireApi, goalsApi } from '../../services/api';
+import { MainStackParams } from '../../navigation/AppNavigator';
 
 const formatCrore = (val: number) => {
   if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
@@ -41,8 +44,16 @@ const RETURN_DELTA_MIN = -3;
 const RETURN_DELTA_MAX = 4;
 const RETURN_DELTA_STEP = 0.5;
 
+const formatCroreGoal = (val: number) => {
+  if (val >= 10000000) return `₹${(val / 10000000).toFixed(1)} Cr`;
+  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
+  return `₹${val.toLocaleString('en-IN')}`;
+};
+
 export function FIREScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
   const [result, setResult] = useState<any>(null);
+  const [goals, setGoals] = useState<any[]>([]);
   const [whatIfResult, setWhatIfResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [whatIfLoading, setWhatIfLoading] = useState(false);
@@ -115,6 +126,7 @@ export function FIREScreen() {
 
   useFocusEffect(useCallback(() => {
     calculate();
+    goalsApi.list().then(({ data }) => setGoals(data)).catch(() => {});
     return () => {
       if (whatIfDebounce.current) clearTimeout(whatIfDebounce.current);
     };
@@ -382,6 +394,52 @@ export function FIREScreen() {
               ))}
             </View>
 
+            {/* Financial Goals */}
+            <View style={styles.goalsCard}>
+              <View style={styles.goalsHeader}>
+                <View>
+                  <Text style={styles.goalsTitle}>Financial Goals</Text>
+                  <Text style={styles.goalsSubtitle}>Track savings for life milestones</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.goalsViewAll}
+                  onPress={() => navigation.navigate('Goals')}
+                >
+                  <Text style={styles.goalsViewAllText}>
+                    {goals.length > 0 ? 'View All ›' : '+ Add Goal'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {goals.length === 0 ? (
+                <TouchableOpacity
+                  style={styles.goalsEmpty}
+                  onPress={() => navigation.navigate('EditGoal', {})}
+                >
+                  <Text style={styles.goalsEmptyIcon}>🎯</Text>
+                  <Text style={styles.goalsEmptyText}>
+                    Add goals like "Buy house in 5 years" to calculate a dedicated monthly SIP
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                goals.slice(0, 3).map((goal) => (
+                  <View key={goal.id} style={styles.goalRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.goalRowName}>{goal.name}</Text>
+                      <Text style={styles.goalRowMeta}>
+                        {goal.targetYears} {goal.targetYears === 1 ? 'yr' : 'yrs'} · Target {formatCroreGoal(goal.targetAmount)}
+                      </Text>
+                    </View>
+                    <Text style={styles.goalRowSip}>
+                      {goal.monthlyRequiredSip > 0
+                        ? `${formatCroreGoal(goal.monthlyRequiredSip)}/mo`
+                        : 'On track ✓'}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </View>
+
             <View style={styles.disclaimerBox}>
               <Text style={styles.disclaimerText}>
                 📋 For educational purposes only. Projections assume consistent returns. Real returns vary. Consult a SEBI-registered investment advisor before making decisions.
@@ -456,4 +514,17 @@ const styles = StyleSheet.create({
   fireTd: { color: '#1B4332', fontWeight: '700' },
   disclaimerBox: { backgroundColor: '#FEF9C3', borderRadius: 10, padding: 12 },
   disclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
+  goalsCard: { backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 12, elevation: 1 },
+  goalsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  goalsTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  goalsSubtitle: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  goalsViewAll: { paddingHorizontal: 2, paddingVertical: 2 },
+  goalsViewAllText: { fontSize: 14, color: '#1B4332', fontWeight: '700' },
+  goalsEmpty: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' },
+  goalsEmptyIcon: { fontSize: 24 },
+  goalsEmptyText: { flex: 1, fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  goalRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  goalRowName: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  goalRowMeta: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  goalRowSip: { fontSize: 14, fontWeight: '700', color: '#1B4332' },
 });

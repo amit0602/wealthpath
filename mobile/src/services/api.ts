@@ -151,6 +151,20 @@ export const dematSyncApi = {
   getSessions: () => api.get('/demat-sync/sessions'),
 };
 
+// Goals
+export const goalsApi = {
+  list: () => api.get('/goals'),
+  create: (data: {
+    name: string; targetAmount: number; targetYears: number;
+    currentSavings?: number; expectedReturnRate?: number;
+  }) => api.post('/goals', data),
+  update: (id: string, data: {
+    name?: string; targetAmount?: number; targetYears?: number;
+    currentSavings?: number; expectedReturnRate?: number;
+  }) => api.put(`/goals/${id}`, data),
+  delete: (id: string) => api.delete(`/goals/${id}`),
+};
+
 // Notifications
 export const notificationsApi = {
   registerToken: (token: string, platform: 'ios' | 'android' | 'web') =>

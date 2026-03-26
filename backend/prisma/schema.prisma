@@ -49,6 +49,7 @@ model User {
   mfImportSessions       MfImportSession[]
   dematSyncSessions      DematSyncSession[]
   insuranceCover         InsuranceCover?
+  financialGoals         FinancialGoal[]
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -341,6 +342,23 @@ model DematSyncSession {
 
   @@index([userId, createdAt])
   @@map("demat_sync_sessions")
+}
+
+model FinancialGoal {
+  id                 String   @id @default(uuid())
+  userId             String   @map("user_id")
+  name               String
+  targetAmount       Float    @map("target_amount")
+  targetYears        Int      @map("target_years")      // years from now
+  currentSavings     Float    @default(0) @map("current_savings")  // ₹ already set aside
+  expectedReturnRate Float    @default(0.10) @map("expected_return_rate") // 10% default
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("financial_goals")
 }
 
 model InsuranceCover {
