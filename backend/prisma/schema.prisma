@@ -51,6 +51,7 @@ model User {
   insuranceCover         InsuranceCover?
   financialGoals         FinancialGoal[]
   portfolioSnapshots     PortfolioSnapshot[]
+  emergencyFund          EmergencyFund?
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -391,4 +392,17 @@ model PortfolioSnapshot {
   @@unique([userId, snapshotDate])
   @@index([userId, snapshotDate])
   @@map("portfolio_snapshots")
+}
+
+model EmergencyFund {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  liquidSavings  Float    @default(0) @map("liquid_savings")  // ₹ in savings account / liquid FD
+  targetMonths   Int      @default(6) @map("target_months")   // default 6× monthly expenses
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_funds")
 }
