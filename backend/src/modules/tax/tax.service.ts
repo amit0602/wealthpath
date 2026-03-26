@@ -42,6 +42,13 @@ export class TaxService {
     };
   }
 
+  async getProfile(userId: string) {
+    const profile = await this.prisma.taxProfile.findUnique({
+      where: { userId_financialYear: { userId, financialYear: this.currentFY() } },
+    });
+    return profile ?? {};
+  }
+
   async upsertProfile(userId: string, dto: UpsertTaxProfileDto) {
     const fy = this.currentFY();
     const result = calculateTax({

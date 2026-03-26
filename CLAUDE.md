@@ -267,10 +267,10 @@ subscriptionsApi  → /subscriptions/me (GET), /subscriptions/create-order (POST
 
 ### Phase 3 — Product Improvements (prioritised)
 
-#### P1 — Fix gaps that actively hurt the experience
-1. **Insurance input & health score fix** — add an InsuranceScreen where users enter term cover amount, health cover, and annual premium; wire into the health score so the insurance dimension can score above 50; `InsuranceCover` model on backend; fixes the "Insurance data not connected" dead end
-2. **80C optimizer** — UI to enter PPF contributions, ELSS, insurance premiums, home loan principal; show exact 80C room remaining and rank instruments by tax efficiency; connect to the Tax Planner's `section80cRemaining` field which already exists but has no input surface
-3. **Corpus gap framing** — reframe the Dashboard red `-₹X Cr` gap as a positive actionable target ("Invest ₹28,936/mo to reach your FIRE goal") to reduce anxiety and improve retention; the scary deficit number should be secondary
+#### P1 — Fix gaps that actively hurt the experience ✅
+1. **Insurance input & health score fix** ✅ — `InsuranceCover` model; `InsuranceModule` (GET/PUT `/insurance/me`); `InsuranceScreen` with term + health cover toggles, sum assured, premium fields; health score `scoreInsurance()` now uses real data (0–100 vs hardcoded 50); "Insurance Coverage" entry in Profile → Edit Details (PR #16)
+2. **80C optimizer** ✅ — `GET /tax/profile` endpoint added; `EditTaxProfileScreen` with salary, HRA, 80C manual input, 80D, 80CCD(1B), home loan interest; live 80C progress bar + "invest X more to max out" tip; "Edit Profile" button on Tax Planner screen (PR #16)
+3. **Corpus gap framing** ✅ — Dashboard FIRE card now shows "Invest ₹X/mo to reach your FIRE goal by age Y" as primary CTA; gap de-emphasised to secondary grey label; on-track state shows green confirmation (PR #16)
 
 #### P2 — High-value new features
 4. **Goal-based planner** — users define 2–3 financial goals alongside FIRE (e.g. "Buy house in 5 years — need ₹40L", "Child's education in 8 years — need ₹25L"); each goal gets a corpus target, timeline, and dedicated SIP calculation; `FinancialGoal` model on backend; new Goals tab or section under FIRE Calculator

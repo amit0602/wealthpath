@@ -48,6 +48,7 @@ model User {
   subscriptionOrders     SubscriptionOrder[]
   mfImportSessions       MfImportSession[]
   dematSyncSessions      DematSyncSession[]
+  insuranceCover         InsuranceCover?
   pushTokens             PushToken[]
   notificationPreference NotificationPreference?
   notificationLogs       NotificationLog[]
@@ -340,4 +341,21 @@ model DematSyncSession {
 
   @@index([userId, createdAt])
   @@map("demat_sync_sessions")
+}
+
+model InsuranceCover {
+  id                  String   @id @default(uuid())
+  userId              String   @unique @map("user_id")
+  hasTermInsurance    Boolean  @default(false) @map("has_term_insurance")
+  termCoverAmount     Float    @default(0) @map("term_cover_amount")     // ₹ sum assured
+  annualTermPremium   Float    @default(0) @map("annual_term_premium")
+  hasHealthInsurance  Boolean  @default(false) @map("has_health_insurance")
+  healthCoverAmount   Float    @default(0) @map("health_cover_amount")   // ₹ sum insured
+  annualHealthPremium Float    @default(0) @map("annual_health_premium")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("insurance_covers")
 }

@@ -99,6 +99,7 @@ export const investmentsApi = {
 // Tax
 export const taxApi = {
   getComparison: () => api.get('/tax/comparison'),
+  getProfile: () => api.get('/tax/profile'),
   updateProfile: (data: any) => api.put('/tax/profile', data),
   calculateHra: (data: any) => api.post('/tax/calculate-hra', data),
 };
@@ -117,6 +118,15 @@ export const subscriptionsApi = {
     api.post('/subscriptions/verify-payment', data),
   cancel: () => api.post('/subscriptions/cancel'),
   devActivate: (plan: 'monthly' | 'annual') => api.post('/subscriptions/dev-activate', { plan }),
+};
+
+// Insurance
+export const insuranceApi = {
+  get: () => api.get('/insurance/me'),
+  upsert: (data: {
+    hasTermInsurance?: boolean; termCoverAmount?: number; annualTermPremium?: number;
+    hasHealthInsurance?: boolean; healthCoverAmount?: number; annualHealthPremium?: number;
+  }) => api.put('/insurance/me', data),
 };
 
 // MF Import
