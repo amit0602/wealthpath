@@ -94,6 +94,7 @@ export const investmentsApi = {
   update: (id: string, data: any) => api.put(`/investments/${id}`, data),
   delete: (id: string) => api.delete(`/investments/${id}`),
   getAllocation: () => api.get('/investments/allocation'),
+  getSnapshots: () => api.get('/investments/snapshots'),
 };
 
 // Tax

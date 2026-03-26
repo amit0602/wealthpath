@@ -84,7 +84,41 @@ export class InvestmentsService {
     const investments = await this.prisma.investment.findMany({
       where: { userId, isActive: true },
     });
-    return this.buildAllocationSummary(investments);
+    const summary = this.buildAllocationSummary(investments);
+
+    // Upsert today's portfolio snapshot (one per day)
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const totalCorpus = Number(summary.totalCorpus);
+    if (totalCorpus > 0) {
+      await this.prisma.portfolioSnapshot.upsert({
+        where: { userId_snapshotDate: { userId, snapshotDate: today } },
+        create: { userId, totalCorpus, snapshotDate: today },
+        update: { totalCorpus },
+      });
+    }
+
+    return summary;
+  }
+
+  async getSnapshots(userId: string) {
+    // Return last 12 daily snapshots (one per month — latest per month)
+    const snapshots = await this.prisma.portfolioSnapshot.findMany({
+      where: { userId },
+      orderBy: { snapshotDate: 'desc' },
+      take: 90, // look back up to 90 days to find 12 months of data
+    });
+
+    // Group by month (YYYY-MM), keep latest snapshot per month
+    const byMonth = new Map<string, typeof snapshots[0]>();
+    for (const s of snapshots) {
+      const month = s.snapshotDate.slice(0, 7); // YYYY-MM
+      if (!byMonth.has(month)) byMonth.set(month, s);
+    }
+
+    // Return chronological order, up to 12 months
+    return Array.from(byMonth.values())
+      .sort((a, b) => a.snapshotDate.localeCompare(b.snapshotDate))
+      .slice(-12);
   }
 
   private buildAllocationSummary(investments: any[]) {

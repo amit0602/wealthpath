@@ -36,4 +36,9 @@ export class InvestmentsController {
   getAllocation(@Request() req: any) {
     return this.investmentsService.getAllocationSummary(req.user.userId);
   }
+
+  @Get('snapshots')
+  getSnapshots(@Request() req: any) {
+    return this.investmentsService.getSnapshots(req.user.userId);
+  }
 }
