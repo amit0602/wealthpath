@@ -1,11 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { taxApi } from '../../services/api';
+import { MainStackParams } from '../../navigation/AppNavigator';
 
 const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
 
 export function TaxPlannerScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
   const [tax, setTax] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'comparison' | 'deductions'>('comparison');
@@ -23,8 +27,15 @@ export function TaxPlannerScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Tax Planner</Text>
-        <Text style={styles.subtitle}>FY {tax?.financialYear ?? '2025-26'}</Text>
+        <View style={styles.headerRow}>
+          <View>
+            <Text style={styles.title}>Tax Planner</Text>
+            <Text style={styles.subtitle}>FY {tax?.financialYear ?? '2025-26'}</Text>
+          </View>
+          <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditTaxProfile')}>
+            <Text style={styles.editButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Tabs */}
         <View style={styles.tabs}>
@@ -118,8 +129,11 @@ export function TaxPlannerScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   content: { padding: 20, gap: 14, paddingBottom: 32 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: -8 },
+  subtitle: { fontSize: 14, color: '#6B7280' },
+  editButton: { borderWidth: 1, borderColor: '#1B4332', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  editButtonText: { fontSize: 13, fontWeight: '600', color: '#1B4332' },
   tabs: { flexDirection: 'row', backgroundColor: '#E5E7EB', borderRadius: 10, padding: 3 },
   tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 8 },
   tabActive: { backgroundColor: '#fff' },

@@ -25,9 +25,10 @@ export class HealthScoreService {
   constructor(private prisma: PrismaService) {}
 
   async calculate(userId: string): Promise<HealthScoreResult> {
-    const [profile, investments] = await Promise.all([
+    const [profile, investments, insuranceCover] = await Promise.all([
       this.prisma.financialProfile.findUnique({ where: { userId } }),
       this.prisma.investment.findMany({ where: { userId, isActive: true } }),
+      this.prisma.insuranceCover.findUnique({ where: { userId } }),
     ]);
 
     const monthlyExpenses = profile ? Number(profile.monthlyExpenses) : 0;
@@ -43,8 +44,8 @@ export class HealthScoreService {
     const emergencyFundMonths = monthlyExpenses > 0 ? liquidAssets / monthlyExpenses : 0;
     const emergencyFund = this.scoreEmergencyFund(emergencyFundMonths);
 
-    // 2. Insurance: check if monthly contribution indicates insurance (proxy for POC)
-    const insurance = this.scoreInsurance(monthlyIncome);
+    // 2. Insurance: score based on actual cover data (if entered)
+    const insurance = this.scoreInsurance(monthlyIncome, insuranceCover);
 
     // 3. Debt ratio: EMI / take-home income
     const takeHome = profile ? Number(profile.monthlyTakeHome) : monthlyIncome * 0.8;
@@ -97,15 +98,53 @@ export class HealthScoreService {
     return { score: 20, status: 'critical', message: `Only ${months.toFixed(1)} months covered`, recommendation: 'Priority: Build emergency fund to at least 3 months before investing.' };
   }
 
-  private scoreInsurance(monthlyIncome: number): ScoreComponent {
+  private scoreInsurance(monthlyIncome: number, cover: any): ScoreComponent {
     const annualIncome = monthlyIncome * 12;
-    const recommendedCover = annualIncome * 10;
-    // POC: flag as needing review (no insurance data in Phase 1)
+    const recommendedTerm = annualIncome * 10;
+    const recommendedHealth = 500000; // ₹5L minimum
+
+    if (!cover || (!cover.hasTermInsurance && !cover.hasHealthInsurance)) {
+      return {
+        score: 0,
+        status: 'critical',
+        message: 'No insurance details added',
+        recommendation: `Add your insurance details. Recommended: ₹${(recommendedTerm / 100000).toFixed(0)}L term cover + ₹5L health cover.`,
+      };
+    }
+
+    // Term score (60% weight)
+    let termScore = 0;
+    if (cover.hasTermInsurance && cover.termCoverAmount > 0) {
+      const ratio = annualIncome > 0 ? cover.termCoverAmount / annualIncome : 0;
+      termScore = ratio >= 10 ? 100 : ratio >= 5 ? 70 : 40;
+    }
+
+    // Health score (40% weight)
+    let healthScore = 0;
+    if (cover.hasHealthInsurance && cover.healthCoverAmount > 0) {
+      healthScore = cover.healthCoverAmount >= 1000000 ? 100 : cover.healthCoverAmount >= 500000 ? 70 : 40;
+    }
+
+    const score = Math.round(termScore * 0.6 + healthScore * 0.4);
+    const status = score >= 70 ? 'good' : score >= 40 ? 'warning' : 'critical';
+
+    const parts: string[] = [];
+    if (cover.hasTermInsurance) parts.push(`Term: ₹${(cover.termCoverAmount / 100000).toFixed(0)}L`);
+    else parts.push('No term insurance');
+    if (cover.hasHealthInsurance) parts.push(`Health: ₹${(cover.healthCoverAmount / 100000).toFixed(0)}L`);
+    else parts.push('No health insurance');
+
+    const recs: string[] = [];
+    if (!cover.hasTermInsurance || cover.termCoverAmount < recommendedTerm)
+      recs.push(`Get ₹${(recommendedTerm / 100000).toFixed(0)}L term cover (10× income)`);
+    if (!cover.hasHealthInsurance || cover.healthCoverAmount < recommendedHealth)
+      recs.push('Get ₹5L+ health cover for family');
+
     return {
-      score: 50,
-      status: 'warning',
-      message: 'Insurance data not connected',
-      recommendation: `Recommended term cover: ₹${(recommendedCover / 100000).toFixed(0)}L (10x annual income). Verify your existing coverage.`,
+      score,
+      status,
+      message: parts.join(' · '),
+      recommendation: recs.length > 0 ? recs.join('. ') : 'Insurance coverage is adequate.',
     };
   }
 

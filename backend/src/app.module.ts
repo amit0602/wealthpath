@@ -12,6 +12,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { MfImportModule } from './modules/mf-import/mf-import.module';
 import { DematSyncModule } from './modules/demat-sync/demat-sync.module';
+import { InsuranceModule } from './modules/insurance/insurance.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { DematSyncModule } from './modules/demat-sync/demat-sync.module';
     NotificationsModule,
     MfImportModule,
     DematSyncModule,
+    InsuranceModule,
   ],
 })
 export class AppModule {}

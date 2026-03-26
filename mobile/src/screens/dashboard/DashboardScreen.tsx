@@ -88,21 +88,35 @@ export function DashboardScreen() {
               </View>
               <Text style={styles.progressPct}>{progressPct.toFixed(0)}%</Text>
             </View>
+
+            {/* Primary CTA — actionable framing */}
+            {corpusGap > 0 ? (
+              <View style={styles.sipBox}>
+                <View>
+                  <Text style={styles.sipLabel}>Invest to reach your FIRE goal</Text>
+                  <Text style={styles.sipHint}>by age {fire.fireAge}</Text>
+                </View>
+                <Text style={styles.sipValue}>{formatCrore(Number(fire.monthlySipRequired))}/mo</Text>
+              </View>
+            ) : (
+              <View style={[styles.sipBox, styles.sipBoxOnTrack]}>
+                <Text style={styles.sipLabel}>You're on track for retirement</Text>
+                <Text style={styles.sipValueGreen}>On Track ✓</Text>
+              </View>
+            )}
+
+            {/* Secondary info */}
             <View style={styles.fireRow}>
               <View>
-                <Text style={styles.fireLabel}>Corpus Needed</Text>
+                <Text style={styles.fireLabel}>Target Corpus</Text>
                 <Text style={styles.fireValue}>{formatCrore(corpusRequired)}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.fireLabel}>Corpus Gap</Text>
-                <Text style={[styles.fireValue, { color: corpusGap > 0 ? '#EF4444' : '#10B981' }]}>
-                  {corpusGap > 0 ? `-${formatCrore(corpusGap)}` : 'On Track ✓'}
+                <Text style={styles.fireLabel}>Gap to close</Text>
+                <Text style={[styles.fireValue, { color: corpusGap > 0 ? '#6B7280' : '#10B981' }]}>
+                  {corpusGap > 0 ? formatCrore(corpusGap) : 'None'}
                 </Text>
               </View>
-            </View>
-            <View style={styles.sipBox}>
-              <Text style={styles.sipLabel}>Required Monthly SIP</Text>
-              <Text style={styles.sipValue}>{formatCrore(Number(fire.monthlySipRequired))}/mo</Text>
             </View>
           </View>
         )}
@@ -154,8 +168,11 @@ const styles = StyleSheet.create({
   fireLabel: { fontSize: 12, color: '#9CA3AF' },
   fireValue: { fontSize: 16, fontWeight: '700', color: '#111827', marginTop: 2 },
   sipBox: { backgroundColor: '#F0FDF4', borderRadius: 10, padding: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sipLabel: { fontSize: 13, color: '#374151' },
-  sipValue: { fontSize: 16, fontWeight: '700', color: '#1B4332' },
+  sipBoxOnTrack: { backgroundColor: '#D1FAE5' },
+  sipLabel: { fontSize: 13, color: '#374151', fontWeight: '600' },
+  sipHint: { fontSize: 11, color: '#6B7280', marginTop: 2 },
+  sipValue: { fontSize: 18, fontWeight: '800', color: '#1B4332' },
+  sipValueGreen: { fontSize: 16, fontWeight: '700', color: '#10B981' },
   portfolioValue: { fontSize: 28, fontWeight: '800', color: '#111827' },
   allocationRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   allocationItem: { backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },

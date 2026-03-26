@@ -102,6 +102,7 @@ export function ProfileScreen() {
             { label: 'Personal Info', subtitle: 'Name, DOB, city, employment', onPress: () => navigation.navigate('EditPersonal') },
             { label: 'Income & Expenses', subtitle: 'Monthly income, expenses, EMI', onPress: () => navigation.navigate('EditFinancials') },
             { label: 'Goals & Risk', subtitle: 'Retirement age, income target, risk level', onPress: () => navigation.navigate('EditGoals') },
+            { label: 'Insurance Coverage', subtitle: 'Term & health cover — affects health score', onPress: () => navigation.navigate('Insurance') },
           ].map(({ label, subtitle, onPress }) => (
             <TouchableOpacity key={label} style={styles.settingRow} onPress={onPress}>
               <View>

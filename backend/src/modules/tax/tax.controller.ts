@@ -17,6 +17,11 @@ export class TaxController {
     return this.taxService.getComparison(req.user.userId);
   }
 
+  @Get('profile')
+  getProfile(@Request() req: any) {
+    return this.taxService.getProfile(req.user.userId);
+  }
+
   @Put('profile')
   upsertProfile(@Request() req: any, @Body() dto: UpsertTaxProfileDto) {
     return this.taxService.upsertProfile(req.user.userId, dto);
