@@ -34,7 +34,7 @@ export class SubscriptionsController {
 
   // Dev-only endpoint — bypasses payment for local testing
   @Post('dev-activate')
-  devActivate(@Request() req: any, @Body() body: { plan?: 'monthly' | 'annual' }) {
-    return this.subscriptionsService.devActivate(req.user.userId, body.plan ?? 'monthly');
+  devActivate(@Request() req: any) {
+    return this.subscriptionsService.devActivate(req.user.userId);
   }
 }

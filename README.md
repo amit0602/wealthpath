@@ -21,23 +21,28 @@ WealthPath is a **read-only monitoring and planning tool**. It helps you underst
 
 ---
 
+## Pricing
+
+**14-day free trial** — full access, no credit card required.
+**₹199/mo** after the trial ends. Cancel anytime. No feature tiers — everything included.
+
 ## Features
 
-### Free
 - **FIRE Calculator** — corpus target, monthly SIP needed, years to retirement; India defaults (6% inflation, 3.33% SWR, 85 life expectancy)
 - **Tax Planner** — old vs new regime comparison, 80C tracker, HRA calculator (FY 2025-26, Budget 2025 slabs)
 - **Investment Tracker** — manually log EPF, PPF, NPS, ELSS, FDs, MFs, direct equity, real estate, gold, SGBs and more
 - **Health Score** — 0–100 score across savings rate, emergency fund, debt ratio, insurance, and retirement track
 - **FIRE What-If Scenarios** — adjust extra SIP, retire age, and return rate to see the impact in real time
+- **Goal-based Planner** — define financial goals (house, education, travel) with dedicated SIP calculations
+- **Net Worth Timeline** — monthly portfolio chart with trend badge
+- **Emergency Fund Tracker** — target, shortfall, and progress bar for your liquid savings
+- **Debt Payoff** — avalanche method loan tracker with freed-EMI nudge on payoff
+- **Insurance Tracker** — term + health cover input wired into health score
 - **PDF Report Export** — one-tap export of your full financial picture to share or save
-- **Profile & Edit** — update income, expenses, goals, and risk appetite at any time
-- **OTP Auth** — phone number login with JWT (15-min access token + 30-day refresh)
-
-### Premium (₹499/mo or ₹3,999/yr)
 - **Push Notifications** — portfolio drift alerts and tax harvesting reminders
-- **CAMS / KFintech MF Import** — upload your Consolidated Account Statement to auto-populate your mutual fund holdings
-- **Demat Holdings Sync** — sync equity holdings from CDSL / NSDL via Account Aggregator
-- **Account Aggregator Auto-Sync** — link bank and investment accounts via RBI-licensed AA (Finvu / OneMoney) for automatic updates
+- **CAMS / KFintech MF Import** — upload your Consolidated Account Statement to auto-populate mutual fund holdings
+- **Demat Holdings Sync** — sync equity holdings from CDSL / NSDL
+- **OTP Auth** — phone number login with JWT (15-min access token + 30-day refresh)
 
 ---
 
@@ -62,15 +67,20 @@ wealthpath/
 │   ├── prisma/                 # Schema + migrations
 │   └── src/
 │       ├── common/
-│       │   └── guards/         # JwtAuthGuard, PremiumGuard
+│       │   ├── guards/         # JwtAuthGuard, PremiumGuard
+│       │   └── interceptors/   # SubscriptionInterceptor (global trial/sub gate)
 │       └── modules/
 │           ├── auth/           # OTP, JWT, refresh tokens
 │           ├── users/          # Profile + financial profile
-│           ├── investments/    # Investment CRUD
+│           ├── investments/    # Investment CRUD + monthly snapshots
 │           ├── fire-calculator/# Corpus + SIP calculations
 │           ├── tax/            # Old vs new regime comparison
 │           ├── health-score/   # Financial health scoring
-│           └── subscriptions/  # Razorpay billing + premium gating
+│           ├── subscriptions/  # Razorpay billing, trial management
+│           ├── insurance/      # Term + health cover
+│           ├── goals/          # Financial goals + SIP targets
+│           ├── emergency-fund/ # Liquid savings tracker
+│           └── loans/          # Debt payoff, avalanche method
 └── mobile/                     # Expo app (port 8081)
     └── src/
         ├── navigation/         # AppNavigator (stack + tabs)
@@ -117,9 +127,11 @@ npx expo start --web        # opens in browser on http://localhost:8081
 
 No SMS gateway needed. The `/auth/send-otp` response includes `devOtp` when `NODE_ENV !== 'production'`. The app auto-fills and submits it — zero friction during development.
 
-### Premium in Dev Mode
+### Subscription in Dev Mode
 
-No Razorpay account needed. Call `POST /api/v1/subscriptions/dev-activate` (JWT required) to instantly upgrade a user to premium. This endpoint is blocked in production.
+No Razorpay account needed. Call `POST /api/v1/subscriptions/dev-activate` (JWT required) to instantly activate a ₹199/mo subscription. This endpoint is blocked in production.
+
+New users automatically receive a 14-day free trial on registration. To test the trial expiry gate, set `trialEndsAt` to a past date directly in the SQLite database.
 
 ---
 
@@ -159,12 +171,23 @@ No Razorpay account needed. Call `POST /api/v1/subscriptions/dev-activate` (JWT 
 - [x] Profile edit screens (personal, financials, goals)
 - [x] PDF report export
 
-### Phase 2 — Premium (In Progress)
-- [x] Razorpay subscriptions (₹499/mo · ₹3,999/yr) + PremiumGuard
-- [ ] Push notifications — drift alerts + tax harvesting reminders
-- [ ] CAMS / KFintech MF import (CAS file upload, zero regulatory overhead)
-- [ ] CDSL / NSDL demat holdings sync (via Account Aggregator)
-- [ ] Account Aggregator auto-sync (Finvu / OneMoney)
+### Phase 2 — Complete ✅
+- [x] 14-day free trial + ₹199/mo subscription (Razorpay)
+- [x] Push notifications — drift alerts + tax harvesting reminders
+- [x] CAMS / KFintech MF import (CAS file upload)
+- [x] CDSL / NSDL demat holdings sync
+
+### Phase 3 — Complete ✅
+- [x] Insurance tracker + health score integration
+- [x] 80C optimizer + tax profile editor
+- [x] Goal-based planner with SIP targets
+- [x] Net worth timeline chart
+- [x] Emergency fund tracker
+- [x] Debt payoff screen (avalanche method)
+- [x] SIP vs lump sum clarity in investment cards
+
+### Deferred
+- [ ] Account Aggregator auto-sync (Finvu / OneMoney) — requires FIU registration
 
 ---
 

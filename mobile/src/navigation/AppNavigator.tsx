@@ -4,7 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useAuthStore } from '../store/authStore';
-import { notificationsApi } from '../services/api';
+import { notificationsApi, subscriptionsApi } from '../services/api';
 
 // Screens
 import { WelcomeScreen } from '../screens/onboarding/WelcomeScreen';
@@ -77,6 +77,7 @@ export type MainStackParams = {
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
 const MainTab = createBottomTabNavigator<MainTabParams>();
 const MainStack = createNativeStackNavigator<MainStackParams>();
+const SubscriptionGate = createNativeStackNavigator();
 const RootStack = createNativeStackNavigator();
 
 const BRAND_GREEN = '#1B4332';
@@ -141,6 +142,16 @@ function MainStackNavigator() {
   );
 }
 
+// Shown when trial has expired and user has no active subscription.
+// No back gesture — the only way forward is subscribing.
+function SubscriptionGateNavigator() {
+  return (
+    <SubscriptionGate.Navigator screenOptions={{ headerShown: false, gestureEnabled: false }}>
+      <SubscriptionGate.Screen name="SubscriptionGate" component={SubscriptionScreen} />
+    </SubscriptionGate.Navigator>
+  );
+}
+
 async function registerPushToken() {
   if (Platform.OS === 'web') return; // Web push not supported via Expo
 
@@ -162,12 +173,19 @@ async function registerPushToken() {
 }
 
 export function AppNavigator() {
-  const { isAuthenticated, isOnboardingComplete, isLoading, checkAuth } = useAuthStore();
+  const { isAuthenticated, isOnboardingComplete, isLoading, subscriptionExpired, checkAuth, setSubscriptionExpired } = useAuthStore();
 
   useEffect(() => { checkAuth(); }, []);
 
+  // Check subscription status once auth + onboarding are confirmed
   useEffect(() => {
     if (isAuthenticated && isOnboardingComplete) {
+      subscriptionsApi.getMe().then(({ data }) => {
+        const expired =
+          (data.plan === 'trial' && data.trialExpired) ||
+          (data.plan === 'active' && data.status !== 'active');
+        setSubscriptionExpired(expired);
+      }).catch(() => {});
       registerPushToken();
     }
   }, [isAuthenticated, isOnboardingComplete]);
@@ -184,6 +202,8 @@ export function AppNavigator() {
     <RootStack.Navigator screenOptions={{ headerShown: false }}>
       {!isAuthenticated || !isOnboardingComplete ? (
         <RootStack.Screen name="Onboarding" component={OnboardingNavigator} />
+      ) : subscriptionExpired ? (
+        <RootStack.Screen name="SubscriptionGate" component={SubscriptionGateNavigator} />
       ) : (
         <RootStack.Screen name="Main" component={MainStackNavigator} />
       )}
