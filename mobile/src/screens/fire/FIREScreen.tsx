@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fireApi, goalsApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
+import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
 
 const formatCrore = (val: number) => {
   if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
@@ -51,6 +52,7 @@ const formatCroreGoal = (val: number) => {
 };
 
 export function FIREScreen() {
+  useSubscriptionGate();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
   const [result, setResult] = useState<any>(null);
   const [goals, setGoals] = useState<any[]>([]);

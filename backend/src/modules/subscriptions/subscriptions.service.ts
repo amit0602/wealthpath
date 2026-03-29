@@ -6,16 +6,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 
 // Amount in paise
-const PLAN_PRICES: Record<'monthly' | 'annual', number> = {
-  monthly: 49900,   // ₹499
-  annual: 399900,   // ₹3,999
-};
-
-// Duration in days
-const PLAN_DURATION_DAYS: Record<'monthly' | 'annual', number> = {
-  monthly: 30,
-  annual: 365,
-};
+const PLAN_PRICE_PAISE = 19900; // ₹199/mo
+const PLAN_DURATION_DAYS = 30;
 
 @Injectable()
 export class SubscriptionsService {
@@ -33,15 +25,30 @@ export class SubscriptionsService {
   async getSubscription(userId: string) {
     const sub = await this.prisma.subscription.findUnique({ where: { userId } });
     if (!sub) throw new NotFoundException('Subscription not found');
-    return sub;
+
+    const now = new Date();
+    const trialActive = sub.plan === 'trial' && !!sub.trialEndsAt && sub.trialEndsAt > now;
+    const trialExpired = sub.plan === 'trial' && !!sub.trialEndsAt && sub.trialEndsAt <= now;
+    const trialDaysLeft = trialActive && sub.trialEndsAt
+      ? Math.ceil((sub.trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+      : 0;
+
+    return { ...sub, trialActive, trialExpired, trialDaysLeft };
   }
 
-  async isPremium(userId: string): Promise<boolean> {
+  async hasAccess(userId: string): Promise<boolean> {
     const sub = await this.prisma.subscription.findUnique({ where: { userId } });
     if (!sub) return false;
-    if (sub.plan !== 'premium' || sub.status !== 'active') return false;
-    if (sub.expiresAt && sub.expiresAt < new Date()) return false;
-    return true;
+
+    const now = new Date();
+    // Active trial
+    if (sub.plan === 'trial' && sub.trialEndsAt && sub.trialEndsAt > now) return true;
+    // Active paid subscription
+    if (sub.plan === 'active' && sub.status === 'active') {
+      if (sub.expiresAt && sub.expiresAt < now) return false;
+      return true;
+    }
+    return false;
   }
 
   async createOrder(userId: string, dto: CreateOrderDto) {
@@ -49,11 +56,10 @@ export class SubscriptionsService {
       throw new BadRequestException('Payment gateway not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
     }
 
-    const amountPaise = PLAN_PRICES[dto.plan];
     const sub = await this.getSubscription(userId);
 
     const order = await this.razorpay.orders.create({
-      amount: amountPaise,
+      amount: PLAN_PRICE_PAISE,
       currency: 'INR',
       notes: { userId, plan: dto.plan },
     });
@@ -64,14 +70,14 @@ export class SubscriptionsService {
         subscriptionId: sub.id,
         razorpayOrderId: order.id,
         plan: dto.plan,
-        amountPaise,
+        amountPaise: PLAN_PRICE_PAISE,
         status: 'pending',
       },
     });
 
     return {
       orderId: order.id,
-      amount: amountPaise,
+      amount: PLAN_PRICE_PAISE,
       currency: 'INR',
       keyId: process.env.RAZORPAY_KEY_ID,
     };
@@ -96,9 +102,8 @@ export class SubscriptionsService {
     if (!order || order.userId !== userId) throw new NotFoundException('Order not found.');
     if (order.status === 'paid') return { message: 'Already activated.' };
 
-    const durationDays = PLAN_DURATION_DAYS[order.plan as 'monthly' | 'annual'];
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + durationDays);
+    expiresAt.setDate(expiresAt.getDate() + PLAN_DURATION_DAYS);
 
     await this.prisma.$transaction([
       this.prisma.subscriptionOrder.update({
@@ -107,16 +112,16 @@ export class SubscriptionsService {
       }),
       this.prisma.subscription.update({
         where: { userId },
-        data: { plan: 'premium', status: 'active', expiresAt },
+        data: { plan: 'active', status: 'active', expiresAt },
       }),
     ]);
 
-    return { message: 'Premium activated.', expiresAt };
+    return { message: 'Subscription activated.', expiresAt };
   }
 
   async cancel(userId: string) {
     const sub = await this.getSubscription(userId);
-    if (sub.plan !== 'premium') throw new BadRequestException('No active premium subscription.');
+    if (sub.plan !== 'active') throw new BadRequestException('No active subscription.');
 
     await this.prisma.subscription.update({
       where: { userId },
@@ -126,21 +131,20 @@ export class SubscriptionsService {
     return { message: 'Subscription cancelled.' };
   }
 
-  // Dev-only: instantly activate premium without payment
-  async devActivate(userId: string, plan: 'monthly' | 'annual') {
+  // Dev-only: instantly activate without payment
+  async devActivate(userId: string) {
     if (process.env.NODE_ENV === 'production') {
       throw new ForbiddenException();
     }
 
-    const durationDays = PLAN_DURATION_DAYS[plan];
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + durationDays);
+    expiresAt.setDate(expiresAt.getDate() + PLAN_DURATION_DAYS);
 
     const sub = await this.prisma.subscription.update({
       where: { userId },
-      data: { plan: 'premium', status: 'active', expiresAt },
+      data: { plan: 'active', status: 'active', expiresAt },
     });
 
-    return { message: 'Dev premium activated.', plan: sub.plan, expiresAt: sub.expiresAt };
+    return { message: 'Dev subscription activated.', plan: sub.plan, expiresAt: sub.expiresAt };
   }
 }

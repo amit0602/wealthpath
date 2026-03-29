@@ -5,10 +5,12 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usersApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
+import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
 import { exportPdfReport } from '../../utils/generateReport';
 import { MainStackParams } from '../../navigation/AppNavigator';
 
 export function ProfileScreen() {
+  useSubscriptionGate();
   const [user, setUser] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
   const [exporting, setExporting] = useState(false);

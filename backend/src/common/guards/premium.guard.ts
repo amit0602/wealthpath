@@ -10,9 +10,9 @@ export class PremiumGuard implements CanActivate {
     const userId = request.user?.userId;
     if (!userId) return false;
 
-    const premium = await this.subscriptionsService.isPremium(userId);
+    const premium = await this.subscriptionsService.hasAccess(userId);
     if (!premium) {
-      throw new ForbiddenException('Upgrade to WealthPath Premium to access this feature.');
+      throw new ForbiddenException('Your free trial has ended. Subscribe to continue using WealthPath.');
     }
     return true;
   }

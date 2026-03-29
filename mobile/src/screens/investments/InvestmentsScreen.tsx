@@ -14,6 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
 import { investmentsApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
+import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
 
 const INSTRUMENT_LABELS: Record<string, string> = {
   epf: 'EPF', ppf: 'PPF', nps_tier1: 'NPS Tier 1', nps_tier2: 'NPS Tier 2',
@@ -97,6 +98,7 @@ function InvestmentCard({ inv, onPress }: { inv: any; onPress: () => void }) {
 }
 
 export function InvestmentsScreen() {
+  useSubscriptionGate();
   const navigation = useNavigation<NavProp>();
   const [data, setData] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
