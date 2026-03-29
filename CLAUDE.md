@@ -40,8 +40,7 @@ WealthPath is an **India-first personal finance dashboard and FIRE planning tool
 - A tax planner: old vs new regime comparison for their income
 - A financial health scorer: 0–100 score across 5 dimensions
 
-Phase 1 is free — manual data entry, FIRE calculations, tax comparison, health score.
-Phase 2 adds premium features (₹499/mo · ₹3,999/yr): push notifications, MF import from CAMS/KFintech, demat sync, and Account Aggregator auto-sync.
+All features are available to all users. New users get a **14-day free trial** with full access. After the trial, a **₹199/mo subscription** is required to continue. No feature tiers — everything is included.
 
 **Disclaimer present on all projection/estimate screens:** *"For educational purposes only. Not investment advice."*
 
@@ -140,11 +139,13 @@ taxApi            → /tax/comparison (GET), /tax/profile (GET, PUT)
 - `OTPVerificationScreen` auto-fills and verifies `devOtp` on mount — zero friction in dev.
 - In production: `devOtp` is `undefined`; users enter OTP from SMS normally.
 
-### Premium (Dev Mode)
-- No Razorpay account needed in dev. `POST /subscriptions/dev-activate` instantly upgrades the user to premium.
+### Subscription (Dev Mode)
+- No Razorpay account needed in dev. `POST /subscriptions/dev-activate` instantly activates a ₹199/mo subscription for the user.
 - `SubscriptionScreen` calls `devActivate()` directly in dev. In production, replace with `createOrder()` → Razorpay payment sheet → `verifyPayment()`.
 - The endpoint throws `403 Forbidden` in production (`NODE_ENV === 'production'`).
-- To gate a new premium endpoint: `@UseGuards(JwtAuthGuard, PremiumGuard)` — `PremiumGuard` is in `backend/src/common/guards/premium.guard.ts`.
+- **Global subscription gate**: `SubscriptionInterceptor` (registered as `APP_INTERCEPTOR`) blocks all authenticated endpoints except `/auth/*` and `/subscriptions/*` when the user's trial has expired and they have no active subscription. Returns `403 Forbidden`.
+- **Trial expiry flow (mobile)**: `useSubscriptionGate` hook is called in all 5 tab screens. On each focus, it checks subscription status and redirects to `SubscriptionScreen` if trial or subscription has expired.
+- **Trial warning banner**: Dashboard shows an amber banner when `trialDaysLeft <= 2`.
 
 ### Auth / Storage
 - `expo-secure-store` throws on web. All token reads/writes wrapped in try-catch with `localStorage` fallback.

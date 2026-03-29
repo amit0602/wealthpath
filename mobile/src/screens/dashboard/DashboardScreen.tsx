@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fireApi, healthScoreApi, investmentsApi, subscriptionsApi } from '../../services/api';
 import { NetWorthChart } from '../../components/NetWorthChart';
 import { MainStackParams } from '../../navigation/AppNavigator';
+import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
 
 const formatCrore = (val: number) => {
   if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
@@ -22,34 +23,35 @@ export function DashboardScreen() {
   const [snapshots, setSnapshots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+
+  useSubscriptionGate();
 
   const load = async () => {
     try {
-      const [fireRes, healthRes, allocRes, snapshotRes] = await Promise.allSettled([
+      const [fireRes, healthRes, allocRes, snapshotRes, subRes] = await Promise.allSettled([
         fireApi.calculate(),
         healthScoreApi.calculate(),
         investmentsApi.getAllocation(),
         investmentsApi.getSnapshots(),
+        subscriptionsApi.getMe(),
       ]);
       if (fireRes.status === 'fulfilled') setFire(fireRes.value.data);
       if (healthRes.status === 'fulfilled') setHealth(healthRes.value.data);
       if (allocRes.status === 'fulfilled') setAllocation(allocRes.value.data);
       if (snapshotRes.status === 'fulfilled') setSnapshots(snapshotRes.value.data);
+      if (subRes.status === 'fulfilled') {
+        const sub = subRes.value.data;
+        if (sub.trialActive && sub.trialDaysLeft <= 2) setTrialDaysLeft(sub.trialDaysLeft);
+        else setTrialDaysLeft(null);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useFocusEffect(useCallback(() => {
-    load();
-    // Check trial/subscription status — redirect to paywall if expired
-    subscriptionsApi.getMe().then(({ data }) => {
-      const trialExpired = data.plan === 'trial' && data.trialExpired;
-      const subExpired = data.plan === 'active' && data.status !== 'active';
-      if (trialExpired || subExpired) navigation.navigate('Subscription');
-    }).catch(() => {});
-  }, []));
+  useFocusEffect(useCallback(() => { load(); }, []));
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -88,6 +90,15 @@ export function DashboardScreen() {
           <Text style={styles.greeting}>{greeting} 👋</Text>
           <Text style={styles.subtitle}>Here's your financial snapshot</Text>
         </View>
+
+        {/* Trial ending soon banner */}
+        {trialDaysLeft !== null && (
+          <TouchableOpacity style={styles.trialWarning} onPress={() => navigation.navigate('Subscription')}>
+            <Text style={styles.trialWarningText}>
+              ⏳ Your free trial ends in {trialDaysLeft === 0 ? 'less than a day' : `${trialDaysLeft} day${trialDaysLeft === 1 ? '' : 's'}`} — tap to subscribe
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Health Score */}
         {health && (
@@ -196,6 +207,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   content: { padding: 20, gap: 16, paddingBottom: 32 },
   header: { paddingTop: 8 },
+  trialWarning: { backgroundColor: '#FEF9C3', borderRadius: 12, padding: 12 },
+  trialWarningText: { fontSize: 13, fontWeight: '600', color: '#92400E', textAlign: 'center' },
   greeting: { fontSize: 22, fontWeight: '700', color: '#111827' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 2 },
   card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
