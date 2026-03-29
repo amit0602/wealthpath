@@ -114,11 +114,11 @@ export const healthScoreApi = {
 // Subscriptions
 export const subscriptionsApi = {
   getMe: () => api.get('/subscriptions/me'),
-  createOrder: (plan: 'monthly' | 'annual') => api.post('/subscriptions/create-order', { plan }),
+  createOrder: () => api.post('/subscriptions/create-order', { plan: 'monthly' }),
   verifyPayment: (data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
     api.post('/subscriptions/verify-payment', data),
   cancel: () => api.post('/subscriptions/cancel'),
-  devActivate: (plan: 'monthly' | 'annual') => api.post('/subscriptions/dev-activate', { plan }),
+  devActivate: () => api.post('/subscriptions/dev-activate'),
 };
 
 // Loans

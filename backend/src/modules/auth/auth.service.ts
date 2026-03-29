@@ -62,7 +62,13 @@ export class AuthService {
           dateOfBirth: new Date('1990-01-01'),
           employmentType: 'salaried',
           city: '',
-          subscription: { create: { plan: 'free', status: 'active' } },
+          subscription: {
+            create: {
+              plan: 'trial',
+              status: 'active',
+              trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+            },
+          },
         },
       });
     }

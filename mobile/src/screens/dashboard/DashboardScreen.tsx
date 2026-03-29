@@ -1,8 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator, RefreshControl, useWindowDimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { fireApi, healthScoreApi, investmentsApi } from '../../services/api';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { fireApi, healthScoreApi, investmentsApi, subscriptionsApi } from '../../services/api';
 import { NetWorthChart } from '../../components/NetWorthChart';
+import { MainStackParams } from '../../navigation/AppNavigator';
 
 const formatCrore = (val: number) => {
   if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
@@ -12,6 +15,7 @@ const formatCrore = (val: number) => {
 
 export function DashboardScreen() {
   const { width } = useWindowDimensions();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
   const [fire, setFire] = useState<any>(null);
   const [health, setHealth] = useState<any>(null);
   const [allocation, setAllocation] = useState<any>(null);
@@ -37,7 +41,15 @@ export function DashboardScreen() {
     }
   };
 
-  useFocusEffect(useCallback(() => { load(); }, []));
+  useFocusEffect(useCallback(() => {
+    load();
+    // Check trial/subscription status — redirect to paywall if expired
+    subscriptionsApi.getMe().then(({ data }) => {
+      const trialExpired = data.plan === 'trial' && data.trialExpired;
+      const subExpired = data.plan === 'active' && data.status !== 'active';
+      if (trialExpired || subExpired) navigation.navigate('Subscription');
+    }).catch(() => {});
+  }, []));
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
