@@ -9,12 +9,14 @@ interface AuthState {
   userId: string | null;
   phoneNumber: string | null;
   isOnboardingComplete: boolean;
+  subscriptionExpired: boolean;
 
   sendOtp: (phoneNumber: string) => Promise<{ devOtp?: string }>;
   verifyOtp: (phoneNumber: string, otp: string) => Promise<{ isNewUser: boolean }>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   setOnboardingComplete: () => void;
+  setSubscriptionExpired: (expired: boolean) => void;
 }
 
 async function saveToken(key: string, value: string) {
@@ -48,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   userId: null,
   phoneNumber: null,
   isOnboardingComplete: false,
+  subscriptionExpired: false,
 
   sendOtp: async (phoneNumber) => {
     const { data } = await authApi.sendOtp(phoneNumber);
@@ -85,4 +88,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (Platform.OS === 'web') localStorage.setItem('isOnboardingComplete', 'true');
     set({ isOnboardingComplete: true });
   },
+
+  setSubscriptionExpired: (expired) => set({ subscriptionExpired: expired }),
 }));

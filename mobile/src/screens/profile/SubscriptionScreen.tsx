@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { subscriptionsApi } from '../../services/api';
+import { useAuthStore } from '../../store/authStore';
 
 interface Subscription {
   plan: string;
@@ -18,6 +19,7 @@ interface Subscription {
 
 export function SubscriptionScreen() {
   const navigation = useNavigation();
+  const setSubscriptionExpired = useAuthStore((s) => s.setSubscriptionExpired);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [activating, setActivating] = useState(false);
@@ -42,6 +44,7 @@ export function SubscriptionScreen() {
       // In production: call createOrder → open Razorpay payment sheet → verifyPayment.
       const { data } = await subscriptionsApi.devActivate();
       setSubscription((prev) => prev ? { ...prev, plan: 'active', status: 'active', expiresAt: data.expiresAt } : prev);
+      setSubscriptionExpired(false); // Unlocks the app — AppNavigator switches back to MainStack
       Alert.alert('Subscribed!', 'You now have full access to WealthPath.');
     } catch {
       Alert.alert('Activation Failed', 'Could not activate subscription. Please try again.');
@@ -62,7 +65,7 @@ export function SubscriptionScreen() {
             try {
               await subscriptionsApi.cancel();
               setSubscription((prev) => prev ? { ...prev, status: 'cancelled' } : prev);
-              Alert.alert('Cancelled', 'Your subscription has been cancelled.');
+              Alert.alert('Cancelled', 'Your subscription has been cancelled. You can resubscribe anytime.');
             } catch {
               Alert.alert('Error', 'Could not cancel subscription. Please try again.');
             } finally {
