@@ -46,12 +46,13 @@ export function FIREScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>FIRE Calculator</Text>
-        <Text style={styles.subtitle}>Financial Independence, Retire Early</Text>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Plan</Text>
+          <Text style={styles.title}>FIRE number</Text>
+        </View>
 
         {/* Assumption overrides */}
         <View style={styles.controls}>
-          <Text style={styles.controlsLabel}>Adjust Assumptions</Text>
           <View style={styles.controlRow}>
             {[
               { label: 'Retire Age', key: 'retirementAge', placeholder: '60' },
@@ -78,34 +79,42 @@ export function FIREScreen() {
 
         {result && !loading && (
           <>
-            {/* Result hero — visible above fold */}
+            {/* YOU'LL NEED hero card */}
             <View style={styles.heroCard}>
-              <Text style={styles.heroLabel}>Corpus Required</Text>
+              <Text style={styles.heroEyebrow}>YOU'LL NEED</Text>
               <Text style={styles.heroValue}>{formatINR(corpusRequired)}</Text>
               <Text style={styles.heroSub}>
-                Retire at age {result.fireAge} · {overrides.withdrawalRate || '3.33'}% withdrawal
+                to retire at {result.fireAge} · {overrides.withdrawalRate || '3.33'}% SWR · {overrides.inflationRate || '6'}% inflation
               </Text>
+
+              {/* Terracotta progress bar */}
               <View style={styles.heroProgressBg}>
                 <View style={[styles.heroProgressFill, { width: `${progressPct}%` as any }]} />
               </View>
-              <View style={styles.heroMetrics}>
-                <View>
-                  <Text style={styles.heroMetricLabel}>Additional SIP</Text>
-                  <Text style={styles.heroMetricValue}>{formatINR(Number(result.monthlySipRequired))}/mo</Text>
+
+              {/* Three inline stats */}
+              <View style={styles.statsRow}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statItemLabel}>You have</Text>
+                  <Text style={styles.statItemValue}>{formatINR(corpusFv)}</Text>
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={styles.heroMetricLabel}>Gap to goal</Text>
-                  <Text style={[styles.heroMetricValue, { color: corpusGap > 0 ? 'rgba(255,255,255,0.85)' : '#6EE7B7' }]}>
-                    {corpusGap > 0 ? formatINR(corpusGap) : 'On Track'}
+                <View style={[styles.statItem, styles.statItemCenter]}>
+                  <Text style={styles.statItemLabel}>Gap</Text>
+                  <Text style={[styles.statItemValue, corpusGap > 0 && styles.gapValue]}>
+                    {corpusGap > 0 ? formatINR(corpusGap) : '—'}
                   </Text>
+                </View>
+                <View style={[styles.statItem, { alignItems: 'flex-end' }]}>
+                  <Text style={styles.statItemLabel}>Monthly SIP</Text>
+                  <Text style={styles.statItemValue}>{formatINR(Number(result.monthlySipRequired))}</Text>
                 </View>
               </View>
             </View>
 
-            {/* What-if scenarios */}
+            {/* What-if sliders */}
             <WhatIfCard result={result} overrides={overrides} />
 
-            {/* Drill-down: year-by-year projection */}
+            {/* Year-by-year drill-down */}
             <TouchableOpacity
               style={styles.drillRow}
               onPress={() => navigation.navigate('FIREProjection', {
@@ -114,23 +123,25 @@ export function FIREScreen() {
                 fireAge: result.fireAge,
               })}
             >
-              <Text style={styles.drillLabel}>See year-by-year projection</Text>
-              <Text style={styles.drillChevron}>›</Text>
-            </TouchableOpacity>
-
-            {/* Financial goals shortcut */}
-            <TouchableOpacity
-              style={styles.drillRow}
-              onPress={() => navigation.navigate(goals.length > 0 ? 'Goals' : 'EditGoal', {})}
-            >
               <View>
-                <Text style={styles.drillLabel}>Financial Goals</Text>
-                <Text style={styles.drillSub}>
-                  {goals.length > 0 ? `${goals.length} goal${goals.length === 1 ? '' : 's'} tracked` : 'Add goals like house, education, car'}
-                </Text>
+                <Text style={styles.drillLabel}>Year-by-year projection</Text>
+                <Text style={styles.drillSub}>Age {result.currentAge ?? '—'} → {result.fireAge} · {result.projections?.length ?? 0} rows</Text>
               </View>
               <Text style={styles.drillChevron}>›</Text>
             </TouchableOpacity>
+
+            {goals.length > 0 && (
+              <TouchableOpacity
+                style={styles.drillRow}
+                onPress={() => navigation.navigate('Goals')}
+              >
+                <View>
+                  <Text style={styles.drillLabel}>Financial Goals</Text>
+                  <Text style={styles.drillSub}>{goals.length} goal{goals.length === 1 ? '' : 's'} tracked</Text>
+                </View>
+                <Text style={styles.drillChevron}>›</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={styles.disclaimerBox}>
               <Text style={styles.disclaimerText}>
@@ -145,25 +156,34 @@ export function FIREScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  content: { padding: 20, gap: 16, paddingBottom: 32 },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: -8 },
-  controls: { backgroundColor: '#fff', borderRadius: 14, padding: 14, gap: 10, elevation: 1 },
-  controlsLabel: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
+  container: { flex: 1, backgroundColor: '#F5F3EE' },
+  content: { padding: 20, gap: 14, paddingBottom: 32 },
+
+  header: { gap: 2 },
+  eyebrow: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
+  title: { fontSize: 26, fontWeight: '800', color: '#1A1A1A' },
+
+  controls: { backgroundColor: '#fff', borderRadius: 14, padding: 14, elevation: 1 },
   controlRow: { flexDirection: 'row', gap: 8 },
   controlField: { flex: 1, gap: 4 },
   controlLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
   controlInput: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6, fontSize: 14, textAlign: 'center', color: '#111827' },
-  heroCard: { backgroundColor: '#1B4332', borderRadius: 16, padding: 24, gap: 8 },
-  heroLabel: { fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
-  heroValue: { fontSize: 36, fontWeight: '800', color: '#fff', fontVariant: ['tabular-nums'] },
-  heroSub: { fontSize: 13, color: 'rgba(255,255,255,0.7)' },
-  heroProgressBg: { height: 6, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 3, overflow: 'hidden' },
-  heroProgressFill: { height: 6, backgroundColor: '#fff', borderRadius: 3 },
-  heroMetrics: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
-  heroMetricLabel: { fontSize: 11, color: 'rgba(255,255,255,0.6)' },
-  heroMetricValue: { fontSize: 16, fontWeight: '700', color: '#fff', fontVariant: ['tabular-nums'] },
+
+  // Hero card
+  heroCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, gap: 10, elevation: 1 },
+  heroEyebrow: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.6 },
+  heroValue: { fontSize: 40, fontWeight: '800', color: '#1A1A1A', fontVariant: ['tabular-nums'], letterSpacing: -1 },
+  heroSub: { fontSize: 13, color: '#6B7280', marginTop: -4 },
+  heroProgressBg: { height: 5, backgroundColor: '#F0EDE8', borderRadius: 3, overflow: 'hidden' },
+  heroProgressFill: { height: 5, backgroundColor: '#C65D3E', borderRadius: 3 },
+
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 4 },
+  statItem: { gap: 2 },
+  statItemCenter: { alignItems: 'center' },
+  statItemLabel: { fontSize: 11, color: '#9CA3AF' },
+  statItemValue: { fontSize: 15, fontWeight: '700', color: '#1A1A1A', fontVariant: ['tabular-nums'] },
+  gapValue: { color: '#C65D3E' },
+
   drillRow: {
     backgroundColor: '#fff', borderRadius: 14, padding: 16,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -172,6 +192,7 @@ const styles = StyleSheet.create({
   drillLabel: { fontSize: 15, fontWeight: '600', color: '#111827' },
   drillSub: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
   drillChevron: { fontSize: 22, color: '#9CA3AF' },
+
   disclaimerBox: { backgroundColor: '#FEF9C3', borderRadius: 10, padding: 12 },
   disclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
 });
