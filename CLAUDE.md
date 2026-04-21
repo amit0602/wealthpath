@@ -273,10 +273,10 @@ taxApi            → /tax/comparison (GET), /tax/profile (GET, PUT)
 - **CAMS / KFintech MF Import** ✅ — `MfImportModule`, `MfImportSession` model, flexible CAS CSV parser (CAMS/KFintech/MFCentral), multipart upload endpoint, review + confirm upsert into `Investment`; 3-step mobile wizard with per-fund type override; `↑ Import` button on Investments tab (PR #12)
 - **CDSL / NSDL Demat Sync** ✅ — `DematSyncModule`, `DematSyncRequest` model, CAS CSV upload + parse + review + confirm upsert into `Investment`; Account Aggregator EQUITIES FI type preferred with direct CAS upload fallback (PR #14)
 
-> **Regulatory note:** WealthPath is a personal finance dashboard — not an investment advisor. No SEBI RIA license is required. The only regulatory overhead remaining is FIU registration for Account Aggregator auto-sync, which is deferred until after the POC is validated.
+> **Regulatory note:** WealthPath is a personal finance dashboard — not an investment advisor. No SEBI RIA license is required. No regulatory overhead blocks go-live.
 
-### Phase 2 — Deferred
-- **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before production; `AaConsent` model; periodic Bull queue sync. Deferred pending FIU registration.
+### Future Features (post go-live)
+- **Account Aggregator Auto-Sync** — full ReBIT AA consent flow (Finvu / OneMoney); requires FIU registration before this can be built; `AaConsent` model; periodic Bull queue sync. Not needed for go-live — deferred indefinitely until FIU registration is complete.
 
 ---
 
