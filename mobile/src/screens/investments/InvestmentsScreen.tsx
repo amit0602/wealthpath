@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   RefreshControl,
   Alert,
+  Modal,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { investmentsApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
 import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
+import { formatINR } from '../../utils/money';
 
 const INSTRUMENT_LABELS: Record<string, string> = {
   epf: 'EPF', ppf: 'PPF', nps_tier1: 'NPS Tier 1', nps_tier2: 'NPS Tier 2',
@@ -31,12 +33,6 @@ const CATEGORY_COLORS: Record<string, string> = {
 const GROWTH_TYPES = new Set(['elss', 'direct_equity', 'mutual_fund_equity', 'mutual_fund_debt', 'nps_tier1', 'nps_tier2']);
 // Types that use annualContribution (not monthly SIP)
 const ANNUAL_CONTRIB_TYPES = new Set(['ppf', 'epf', 'fd', 'rd']);
-
-const formatINR = (val: number) => {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
 
 type NavProp = NativeStackNavigationProp<MainStackParams>;
 
@@ -72,7 +68,7 @@ function InvestmentCard({ inv, onPress }: { inv: any; onPress: () => void }) {
         ) : hasAnnual ? (
           // Annual contribution (EPF/PPF/FD/RD)
           <View style={styles.annualBadge}>
-            <Text style={styles.annualBadgeText}>📅 {formatINR(annual)}/yr</Text>
+            <Text style={styles.annualBadgeText}>{formatINR(annual)}/yr · annual</Text>
           </View>
         ) : isGrowthAsset ? (
           // Growth asset with no SIP — flag it
@@ -90,7 +86,7 @@ function InvestmentCard({ inv, onPress }: { inv: any; onPress: () => void }) {
 
       {inv.lockInUntil && (
         <Text style={styles.invLockIn}>
-          🔒 Locked until {new Date(inv.lockInUntil).toLocaleDateString('en-IN')}
+          Locked until {new Date(inv.lockInUntil).toLocaleDateString('en-IN')}
         </Text>
       )}
     </TouchableOpacity>
@@ -102,6 +98,7 @@ export function InvestmentsScreen() {
   const navigation = useNavigation<NavProp>();
   const [data, setData] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const load = async () => {
     try {
@@ -131,18 +128,31 @@ export function InvestmentsScreen() {
         {/* Header row */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>Investments</Text>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.importButton} onPress={() => navigation.navigate('DematSync')}>
-              <Text style={styles.importButtonText}>⟳ Demat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.importButton} onPress={() => navigation.navigate('MfImport')}>
-              <Text style={styles.importButtonText}>↑ MF</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('EditInvestment', {})}>
-              <Text style={styles.addButtonText}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.addButton} onPress={() => setShowActions(true)}>
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Action sheet modal */}
+        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowActions(false)}>
+            <View style={styles.actionSheet}>
+              <Text style={styles.actionSheetTitle}>Add Investment</Text>
+              {[
+                { label: 'Add manually', onPress: () => { setShowActions(false); navigation.navigate('EditInvestment', {}); } },
+                { label: 'Import MF (CAMS / KFintech)', onPress: () => { setShowActions(false); navigation.navigate('MfImport'); } },
+                { label: 'Sync Demat holdings', onPress: () => { setShowActions(false); navigation.navigate('DematSync'); } },
+              ].map(({ label, onPress }) => (
+                <TouchableOpacity key={label} style={styles.actionItem} onPress={onPress}>
+                  <Text style={styles.actionItemText}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity style={styles.actionCancel} onPress={() => setShowActions(false)}>
+                <Text style={styles.actionCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
 
         {summary && (
           <>
@@ -220,14 +230,15 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 14, paddingBottom: 32 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  headerButtons: { flexDirection: 'row', gap: 8 },
-  importButton: {
-    backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
-    borderWidth: 1, borderColor: '#1B4332',
-  },
-  importButtonText: { fontSize: 14, fontWeight: '700', color: '#1B4332' },
-  addButton: { backgroundColor: '#1B4332', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  addButtonText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  addButton: { backgroundColor: '#1B4332', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 9 },
+  addButtonText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  actionSheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, gap: 4 },
+  actionSheetTitle: { fontSize: 13, fontWeight: '600', color: '#9CA3AF', textAlign: 'center', marginBottom: 8 },
+  actionItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  actionItemText: { fontSize: 16, fontWeight: '600', color: '#111827', textAlign: 'center' },
+  actionCancel: { paddingVertical: 14, marginTop: 4 },
+  actionCancelText: { fontSize: 16, fontWeight: '600', color: '#EF4444', textAlign: 'center' },
 
   // Total portfolio card
   totalCard: { backgroundColor: '#1B4332', borderRadius: 16, padding: 20, gap: 8 },
