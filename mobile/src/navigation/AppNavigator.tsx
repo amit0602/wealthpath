@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { notificationsApi, subscriptionsApi } from '../services/api';
 
@@ -36,6 +35,7 @@ import { EditGoalScreen } from '../screens/goals/EditGoalScreen';
 import { EmergencyFundScreen } from '../screens/emergency-fund/EmergencyFundScreen';
 import { DebtPayoffScreen } from '../screens/loans/DebtPayoffScreen';
 import { EditLoanScreen } from '../screens/loans/EditLoanScreen';
+import { FIREProjectionScreen } from '../screens/fire/FIREProjectionScreen';
 
 export type OnboardingStackParams = {
   Welcome: undefined;
@@ -73,6 +73,7 @@ export type MainStackParams = {
   EmergencyFund: undefined;
   DebtPayoff: undefined;
   EditLoan: { loanId?: string };
+  FIREProjection: { projections: any[]; corpusRequired: number; fireAge: number };
 };
 
 const OnboardingStack = createNativeStackNavigator<OnboardingStackParams>();
@@ -101,12 +102,6 @@ function OnboardingNavigator() {
   );
 }
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-
-function tabIcon(focused: boolean, active: IoniconsName, inactive: IoniconsName, color: string, size: number) {
-  return <Ionicons name={focused ? active : inactive} size={size} color={color} />;
-}
-
 function MainTabNavigator() {
   return (
     <MainTab.Navigator
@@ -114,56 +109,14 @@ function MainTabNavigator() {
         headerShown: false,
         tabBarActiveTintColor: BRAND_GREEN,
         tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
-          paddingBottom: 6,
-          paddingTop: 4,
-          height: 60,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: { borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingBottom: 4 },
       }}
     >
-      <MainTab.Screen
-        name="Dashboard"
-        component={DashboardScreen}
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused, color, size }) => tabIcon(focused, 'home', 'home-outline', color, size),
-        }}
-      />
-      <MainTab.Screen
-        name="FIRE"
-        component={FIREScreen}
-        options={{
-          title: 'FIRE',
-          tabBarIcon: ({ focused, color, size }) => tabIcon(focused, 'flame', 'flame-outline', color, size),
-        }}
-      />
-      <MainTab.Screen
-        name="Investments"
-        component={InvestmentsScreen}
-        options={{
-          title: 'Invest',
-          tabBarIcon: ({ focused, color, size }) => tabIcon(focused, 'bar-chart', 'bar-chart-outline', color, size),
-        }}
-      />
-      <MainTab.Screen
-        name="TaxPlanner"
-        component={TaxPlannerScreen}
-        options={{
-          title: 'Tax',
-          tabBarIcon: ({ focused, color, size }) => tabIcon(focused, 'receipt', 'receipt-outline', color, size),
-        }}
-      />
-      <MainTab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused, color, size }) => tabIcon(focused, 'person-circle', 'person-circle-outline', color, size),
-        }}
-      />
+      <MainTab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Home' }} />
+      <MainTab.Screen name="FIRE" component={FIREScreen} options={{ title: 'FIRE Calc' }} />
+      <MainTab.Screen name="Investments" component={InvestmentsScreen} />
+      <MainTab.Screen name="TaxPlanner" component={TaxPlannerScreen} options={{ title: 'Tax' }} />
+      <MainTab.Screen name="Profile" component={ProfileScreen} />
     </MainTab.Navigator>
   );
 }
@@ -187,6 +140,7 @@ function MainStackNavigator() {
       <MainStack.Screen name="EmergencyFund" component={EmergencyFundScreen} />
       <MainStack.Screen name="DebtPayoff" component={DebtPayoffScreen} />
       <MainStack.Screen name="EditLoan" component={EditLoanScreen} />
+      <MainStack.Screen name="FIREProjection" component={FIREProjectionScreen} />
     </MainStack.Navigator>
   );
 }
@@ -232,8 +186,7 @@ export function AppNavigator() {
       subscriptionsApi.getMe().then(({ data }) => {
         const expired =
           (data.plan === 'trial' && data.trialExpired) ||
-          (data.plan === 'active' && data.status !== 'active') ||
-          (data.plan === 'active' && !!data.expiresAt && new Date(data.expiresAt) < new Date());
+          (data.plan === 'active' && data.status !== 'active');
         setSubscriptionExpired(expired);
       }).catch(() => {});
       registerPushToken();

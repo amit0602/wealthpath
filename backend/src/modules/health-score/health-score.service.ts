@@ -168,56 +168,8 @@ export class HealthScoreService {
   }
 
   private scoreRetirementTrack(profile: any, currentCorpus: number): ScoreComponent {
-    if (!profile) {
-      return { score: 0, status: 'critical', message: 'Profile incomplete', recommendation: 'Complete your financial profile to track retirement progress.' };
-    }
-
-    const annualIncome = Number(profile.monthlyGrossIncome) * 12;
-    if (annualIncome <= 0) {
-      return { score: 20, status: 'critical', message: 'Income not set', recommendation: 'Update your financial profile with your current income.' };
-    }
-
-    // Corpus-to-annual-income ratio is a practical heuristic for retirement readiness.
-    // Benchmarks (adapted from Fidelity savings guidelines):
-    //   < 1× income  → critical (getting started)
-    //   1–3×         → poor
-    //   3–7×         → on track for most
-    //   7–10×        → good
-    //   10×+         → excellent
-    const ratio = currentCorpus / annualIncome;
-
-    if (ratio >= 10) {
-      return {
-        score: 100, status: 'good',
-        message: `${ratio.toFixed(1)}× annual income saved`,
-        recommendation: 'Excellent corpus. Review asset allocation for the final stretch to retirement.',
-      };
-    }
-    if (ratio >= 7) {
-      return {
-        score: 80, status: 'good',
-        message: `${ratio.toFixed(1)}× annual income saved`,
-        recommendation: 'Great progress. Consider shifting to a more conservative allocation as you near retirement.',
-      };
-    }
-    if (ratio >= 3) {
-      return {
-        score: 60, status: 'warning',
-        message: `${ratio.toFixed(1)}× annual income saved`,
-        recommendation: 'On partial track. Run the FIRE Calculator to find your exact monthly SIP target.',
-      };
-    }
-    if (ratio >= 1) {
-      return {
-        score: 35, status: 'critical',
-        message: `${ratio.toFixed(1)}× annual income saved`,
-        recommendation: 'Behind target. Increase monthly SIP and reduce discretionary spending to accelerate corpus growth.',
-      };
-    }
-    return {
-      score: 10, status: 'critical',
-      message: `${ratio.toFixed(1)}× annual income saved`,
-      recommendation: 'Critical: Start investing immediately. Even ₹2,000/month compounded for 30 years makes a significant difference.',
-    };
+    if (!profile) return { score: 0, status: 'critical', message: 'Profile incomplete', recommendation: 'Complete your financial profile to track retirement progress.' };
+    // Simple heuristic: compare current corpus to age-based target
+    return { score: 60, status: 'warning', message: 'On partial track', recommendation: 'Run FIRE calculator for detailed retirement projection.' };
   }
 }

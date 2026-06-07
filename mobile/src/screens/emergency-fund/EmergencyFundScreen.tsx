@@ -4,9 +4,7 @@ import {
   TextInput, ActivityIndicator, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { emergencyFundApi, healthScoreApi } from '../../services/api';
-import { MainStackParams } from '../../navigation/AppNavigator';
 
 const formatINR = (val: number) => {
   if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
@@ -16,7 +14,7 @@ const formatINR = (val: number) => {
 const TARGET_MONTHS_OPTIONS = [3, 6, 9, 12];
 
 export function EmergencyFundScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 

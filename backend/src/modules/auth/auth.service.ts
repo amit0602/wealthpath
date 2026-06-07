@@ -46,23 +46,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP');
     }
 
-    // Mark this record used and clean up expired/used records in one transaction
-    await this.prisma.$transaction([
-      this.prisma.otpRecord.update({
-        where: { id: record.id },
-        data: { usedAt: new Date() },
-      }),
-      this.prisma.otpRecord.deleteMany({
-        where: {
-          phoneNumber,
-          id: { not: record.id },
-          OR: [
-            { usedAt: { not: null } },
-            { expiresAt: { lte: new Date() } },
-          ],
-        },
-      }),
-    ]);
+    await this.prisma.otpRecord.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    });
 
     let user = await this.prisma.user.findUnique({ where: { phoneNumber } });
     const isNewUser = !user;
