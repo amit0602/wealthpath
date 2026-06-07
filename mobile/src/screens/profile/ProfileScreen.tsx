@@ -48,7 +48,7 @@ export function ProfileScreen() {
     );
   };
 
-  const isPremium = user?.subscription?.plan === 'premium';
+  const isPremium = user?.subscription?.plan === 'active';
   const city = user?.financialProfile?.city ?? user?.city ?? '';
 
   const NAV_ROWS = [
@@ -80,7 +80,7 @@ export function ProfileScreen() {
               {isPremium && (
                 <View style={styles.premiumBadge}>
                   <Icon name="star" size={12} color="#92400E" />
-                  <Text style={styles.premiumBadgeText}> Premium</Text>
+                  <Text style={styles.premiumBadgeText}> Subscribed</Text>
                 </View>
               )}
             </View>
