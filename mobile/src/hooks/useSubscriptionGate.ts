@@ -16,7 +16,8 @@ export function useSubscriptionGate() {
     subscriptionsApi.getMe().then(({ data }) => {
       const expired =
         (data.plan === 'trial' && data.trialExpired) ||
-        (data.plan === 'active' && data.status !== 'active');
+        (data.plan === 'active' && data.status !== 'active') ||
+        (data.plan === 'active' && !!data.expiresAt && new Date(data.expiresAt) < new Date());
       if (expired) setSubscriptionExpired(true);
     }).catch(() => {});
   }, []));

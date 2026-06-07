@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   trialWarningText: { fontSize: 13, fontWeight: '600', color: '#92400E', textAlign: 'center' },
   greeting: { fontSize: 22, fontWeight: '700', color: '#111827' },
   subtitle: { fontSize: 14, color: '#6B7280', marginTop: 2 },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 10, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 1 },
   cardLabel: { fontSize: 12, color: '#6B7280', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
   scoreValue: { fontSize: 48, fontWeight: '800', color: '#1B4332' },

@@ -12,14 +12,15 @@ import { MainStackParams } from '../../navigation/AppNavigator';
 export function ProfileScreen() {
   useSubscriptionGate();
   const [user, setUser] = useState<any>(null);
-  const [health, setHealth] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
   const { logout } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
 
   useFocusEffect(
     useCallback(() => {
-      usersApi.getMe().then(({ data }) => setUser(data)).catch(console.error);
+      usersApi.getMe()
+        .then(({ data }) => setUser(data))
+        .catch(() => Alert.alert('Error', 'Could not load profile. Please try again.'));
     }, []),
   );
 
@@ -41,20 +42,16 @@ export function ProfileScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: async () => {
-          await usersApi.deleteAccount();
-          await logout();
+          try {
+            await usersApi.deleteAccount();
+            await logout();
+          } catch {
+            Alert.alert('Error', 'Could not delete account. Please try again.');
+          }
         }},
       ],
     );
   };
-
-  const SCORE_COMPONENTS = [
-    { key: 'emergencyFund', label: 'Emergency Fund', weight: '20%' },
-    { key: 'insurance', label: 'Insurance Coverage', weight: '20%' },
-    { key: 'debtRatio', label: 'Debt-to-Income', weight: '15%' },
-    { key: 'savingsRate', label: 'Savings Rate', weight: '25%' },
-    { key: 'retirementTrack', label: 'Retirement Track', weight: '20%' },
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,11 +67,11 @@ export function ProfileScreen() {
               <Text style={styles.name}>{user.fullName || 'Complete your profile'}</Text>
               <Text style={styles.phone}>{user.phoneNumber}</Text>
               <TouchableOpacity
-                style={[styles.planBadge, user.subscription?.plan === 'premium' && styles.planBadgePremium]}
+                style={[styles.planBadge, user.subscription?.plan === 'active' && styles.planBadgePremium]}
                 onPress={() => navigation.navigate('Subscription')}
               >
                 <Text style={styles.planText}>
-                  {user.subscription?.plan === 'premium' ? '⭐ Premium' : 'Free Plan — Upgrade ›'}
+                  {user.subscription?.plan === 'active' ? '⭐ Premium' : 'Free Plan — Upgrade ›'}
                 </Text>
               </TouchableOpacity>
             </View>

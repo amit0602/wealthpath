@@ -86,8 +86,17 @@ export function TaxPlannerScreen() {
           <View style={styles.deductionsCard}>
             <Text style={styles.sectionTitle}>Section 80C</Text>
             <View style={styles.deductionRow}>
-              <View style={[styles.deductionBar, { flex: Math.min(Number(tax.autoDetected80c ?? 0) / 150000, 1) }]} />
-              <View style={[styles.deductionBarBg, { flex: Math.max(1 - Number(tax.autoDetected80c ?? 0) / 150000, 0) }]} />
+              {(() => {
+                const used80c = Math.min(Number(tax.autoDetected80c ?? 0), 150000);
+                const usedFlex = used80c / 150000;
+                const remainFlex = 1 - usedFlex;
+                return (
+                  <>
+                    {usedFlex > 0 && <View style={[styles.deductionBar, { flex: usedFlex }]} />}
+                    {remainFlex > 0 && <View style={[styles.deductionBarBg, { flex: remainFlex }]} />}
+                  </>
+                );
+              })()}
             </View>
             <Text style={styles.deductionText}>
               Used: {formatINR(tax.autoDetected80c ?? 0)} / ₹1,50,000

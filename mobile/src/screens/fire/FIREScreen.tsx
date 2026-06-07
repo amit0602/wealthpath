@@ -108,7 +108,7 @@ export function FIREScreen() {
       if (wi.returnDelta !== 0) {
         // Use actual pre-retirement return from last calculation, fallback to 12%
         const inputs = result?.calculationInputs ? JSON.parse(result.calculationInputs) : null;
-        const currentReturn = inputs?.expectedReturnPre ?? 0.12;
+        const currentReturn = Number(inputs?.expectedReturnPreRetirement ?? 0.12);
         payload.expectedReturnPre = Math.max(0.04, Math.min(0.20, currentReturn + wi.returnDelta / 100));
       }
       const { data } = await fireApi.calculate(payload);

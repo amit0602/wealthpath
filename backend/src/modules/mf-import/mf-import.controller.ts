@@ -38,7 +38,7 @@ export class MfImportController {
   )
   uploadCas(
     @Request() req: any,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
   ) {
     if (!file) throw new BadRequestException('No file uploaded.');
     const content = file.buffer.toString('utf-8');

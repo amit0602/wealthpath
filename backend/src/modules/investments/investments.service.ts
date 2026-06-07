@@ -61,15 +61,32 @@ export class InvestmentsService {
     if (!investment) throw new NotFoundException('Investment not found');
     if (investment.userId !== userId) throw new ForbiddenException();
 
-    // Save value history snapshot
-    const dtoAny = dto as any;
-    if (dtoAny.currentValue !== undefined && dtoAny.currentValue !== investment.currentValue) {
+    // Save value history snapshot before overwriting current value
+    if (dto.currentValue !== undefined && dto.currentValue !== Number(investment.currentValue)) {
       await this.prisma.investmentValueHistory.create({
         data: { investmentId: id, recordedValue: investment.currentValue },
       });
     }
 
-    return this.prisma.investment.update({ where: { id }, data: dto });
+    // Explicitly map fields so unknown/extra DTO properties never reach Prisma
+    const data: Record<string, any> = {};
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.instrumentType !== undefined) data.instrumentType = dto.instrumentType;
+    if (dto.currentValue !== undefined) data.currentValue = dto.currentValue;
+    if (dto.monthlyContribution !== undefined) data.monthlyContribution = dto.monthlyContribution;
+    if (dto.annualContribution !== undefined) data.annualContribution = dto.annualContribution;
+    if (dto.expectedReturnRate !== undefined) {
+      data.expectedReturnRate = dto.expectedReturnRate;
+    } else if (dto.instrumentType !== undefined) {
+      // If instrument type changed but no new return rate given, apply the default for the new type
+      data.expectedReturnRate = DEFAULT_RETURNS[dto.instrumentType] ?? 0.08;
+    }
+    if (dto.startDate !== undefined) data.startDate = dto.startDate ? new Date(dto.startDate) : null;
+    if (dto.maturityDate !== undefined) data.maturityDate = dto.maturityDate ? new Date(dto.maturityDate) : null;
+    if (dto.lockInUntil !== undefined) data.lockInUntil = dto.lockInUntil ? new Date(dto.lockInUntil) : null;
+    if (dto.notes !== undefined) data.notes = dto.notes;
+
+    return this.prisma.investment.update({ where: { id }, data });
   }
 
   async remove(userId: string, id: string) {

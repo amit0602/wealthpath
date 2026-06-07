@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   RefreshControl,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -101,6 +102,7 @@ export function InvestmentsScreen() {
   useSubscriptionGate();
   const navigation = useNavigation<NavProp>();
   const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
@@ -110,6 +112,7 @@ export function InvestmentsScreen() {
     } catch {
       Alert.alert('Error', 'Could not load investments');
     } finally {
+      setLoading(false);
       setRefreshing(false);
     }
   };
@@ -121,6 +124,14 @@ export function InvestmentsScreen() {
 
   const activeSipCount = investments.filter((i) => Number(i.monthlyContribution) > 0).length;
   const lumpSumCount = investments.length - activeSipCount;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#1B4332" style={{ marginTop: 60 }} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -218,16 +229,16 @@ export function InvestmentsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   content: { padding: 20, gap: 14, paddingBottom: 32 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  headerButtons: { flexDirection: 'row', gap: 8 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  title: { fontSize: 24, fontWeight: '800', color: '#111827', flex: 1 },
+  headerButtons: { flexDirection: 'row', gap: 6, flexShrink: 0 },
   importButton: {
-    backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6,
     borderWidth: 1, borderColor: '#1B4332',
   },
-  importButtonText: { fontSize: 14, fontWeight: '700', color: '#1B4332' },
-  addButton: { backgroundColor: '#1B4332', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  addButtonText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  importButtonText: { fontSize: 12, fontWeight: '700', color: '#1B4332' },
+  addButton: { backgroundColor: '#1B4332', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 6 },
+  addButtonText: { fontSize: 12, fontWeight: '700', color: '#fff' },
 
   // Total portfolio card
   totalCard: { backgroundColor: '#1B4332', borderRadius: 16, padding: 20, gap: 8 },

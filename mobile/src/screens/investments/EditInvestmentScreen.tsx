@@ -323,7 +323,7 @@ export function EditInvestmentScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: 24, gap: 20, paddingBottom: 40 },
   backButton: { alignSelf: 'flex-start' },
