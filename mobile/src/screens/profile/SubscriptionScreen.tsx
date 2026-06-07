@@ -91,11 +91,9 @@ export function SubscriptionScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          {navigation.canGoBack() && (
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <Text style={styles.backText}>‹ Back</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>‹ Back</Text>
+          </TouchableOpacity>
           <Text style={styles.title}>WealthPath</Text>
           <Text style={styles.subtitle}>Your complete personal finance dashboard</Text>
         </View>

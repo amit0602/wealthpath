@@ -6,8 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { taxApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
 import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
-
-const formatINR = (val: number) => `₹${val.toLocaleString('en-IN')}`;
+import { formatINR } from '../../utils/money';
 
 export function TaxPlannerScreen() {
   useSubscriptionGate();

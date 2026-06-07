@@ -8,12 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { loansApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
-
-const formatINR = (val: number) => {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
+import { formatINR } from '../../utils/money';
 
 const LOAN_TYPE_LABELS: Record<string, string> = {
   home: '🏠 Home Loan',

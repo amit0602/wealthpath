@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParams } from '../../navigation/AppNavigator';
 import { dematSyncApi, fireApi, healthScoreApi } from '../../services/api';
+import { formatINR } from '../../utils/money';
 
 type NavProp = NativeStackNavigationProp<MainStackParams>;
 
@@ -46,12 +47,6 @@ const BADGE_COLORS: Record<string, string> = {
   gold: '#FEF9C3',
   mutual_fund_equity: '#DBEAFE',
   other: '#F3F4F6',
-};
-
-const formatINR = (v: number) => {
-  if (v >= 10000000) return `₹${(v / 10000000).toFixed(2)} Cr`;
-  if (v >= 100000) return `₹${(v / 100000).toFixed(1)} L`;
-  return `₹${v.toLocaleString('en-IN')}`;
 };
 
 type Step = 'instructions' | 'reviewing' | 'done';

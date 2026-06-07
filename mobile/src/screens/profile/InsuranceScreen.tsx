@@ -13,12 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { insuranceApi, healthScoreApi } from '../../services/api';
-
-const formatLakh = (val: number) => {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
+import { formatINR } from '../../utils/money';
 
 export function InsuranceScreen() {
   const navigation = useNavigation();
@@ -117,7 +112,7 @@ export function InsuranceScreen() {
                 placeholderTextColor="#9CA3AF"
               />
               {termCoverAmount ? (
-                <Text style={styles.preview}>{formatLakh(Number(termCoverAmount))}</Text>
+                <Text style={styles.preview}>{formatINR(Number(termCoverAmount))}</Text>
               ) : null}
 
               <Text style={[styles.label, { marginTop: 12 }]}>Annual Premium (₹)</Text>
@@ -163,7 +158,7 @@ export function InsuranceScreen() {
                 placeholderTextColor="#9CA3AF"
               />
               {healthCoverAmount ? (
-                <Text style={styles.preview}>{formatLakh(Number(healthCoverAmount))}</Text>
+                <Text style={styles.preview}>{formatINR(Number(healthCoverAmount))}</Text>
               ) : null}
 
               <Text style={[styles.label, { marginTop: 12 }]}>Annual Premium (₹)</Text>

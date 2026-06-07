@@ -5,11 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { emergencyFundApi, healthScoreApi } from '../../services/api';
-
-const formatINR = (val: number) => {
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
+import { formatINR } from '../../utils/money';
 
 const TARGET_MONTHS_OPTIONS = [3, 6, 9, 12];
 
