@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParams } from '../../navigation/AppNavigator';
 import { mfImportApi, fireApi, healthScoreApi } from '../../services/api';
+import { formatINR } from '../../utils/money';
 
 type NavProp = NativeStackNavigationProp<MainStackParams>;
 
@@ -37,12 +38,6 @@ const INSTRUMENT_LABELS: Record<string, string> = {
 };
 
 const INSTRUMENT_TYPES = ['mutual_fund_equity', 'mutual_fund_debt', 'elss'];
-
-const formatINR = (v: number) => {
-  if (v >= 10000000) return `₹${(v / 10000000).toFixed(2)} Cr`;
-  if (v >= 100000) return `₹${(v / 100000).toFixed(1)} L`;
-  return `₹${v.toLocaleString('en-IN')}`;
-};
 
 type Step = 'instructions' | 'reviewing' | 'done';
 

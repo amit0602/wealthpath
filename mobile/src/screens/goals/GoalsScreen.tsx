@@ -8,12 +8,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { goalsApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
-
-const formatCrore = (val: number) => {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
+import { formatINR } from '../../utils/money';
 
 const GOAL_ICONS: Record<string, string> = {
   house: '🏠', home: '🏠', flat: '🏠', property: '🏠',
@@ -149,20 +144,20 @@ export function GoalsScreen() {
               <View style={styles.goalMetrics}>
                 <View style={styles.metricItem}>
                   <Text style={styles.metricLabel}>Target</Text>
-                  <Text style={styles.metricValue}>{formatCrore(goal.targetAmount)}</Text>
+                  <Text style={styles.metricValue}>{formatINR(goal.targetAmount)}</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricItem}>
                   <Text style={styles.metricLabel}>Monthly SIP</Text>
                   <Text style={[styles.metricValue, { color: '#1B4332' }]}>
-                    {goal.monthlyRequiredSip > 0 ? `${formatCrore(goal.monthlyRequiredSip)}/mo` : 'On track ✓'}
+                    {goal.monthlyRequiredSip > 0 ? `${formatINR(goal.monthlyRequiredSip)}/mo` : 'On track ✓'}
                   </Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricItem}>
                   <Text style={styles.metricLabel}>Still Needed</Text>
                   <Text style={styles.metricValue}>
-                    {goal.amountStillNeeded > 0 ? formatCrore(goal.amountStillNeeded) : '—'}
+                    {goal.amountStillNeeded > 0 ? formatINR(goal.amountStillNeeded) : '—'}
                   </Text>
                 </View>
               </View>
@@ -174,7 +169,7 @@ export function GoalsScreen() {
                     <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
                   </View>
                   <Text style={styles.progressText}>
-                    {formatCrore(goal.currentSavings)} saved · {progressPct.toFixed(0)}%
+                    {formatINR(goal.currentSavings)} saved · {progressPct.toFixed(0)}%
                   </Text>
                 </View>
               )}

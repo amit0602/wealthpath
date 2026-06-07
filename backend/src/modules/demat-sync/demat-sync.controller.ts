@@ -14,6 +14,16 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ConfirmDematDto } from './dto/confirm-demat.dto';
 import { DematSyncService } from './demat-sync.service';
 
+// Inline type until @types/multer is confirmed installed
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  buffer: Buffer;
+  size: number;
+}
+
 @Controller('demat-sync')
 @UseGuards(JwtAuthGuard)
 export class DematSyncController {
@@ -41,7 +51,7 @@ export class DematSyncController {
   )
   uploadCas(
     @Request() req: any,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MulterFile,
   ) {
     if (!file) throw new BadRequestException('No file uploaded.');
     const content = file.buffer.toString('utf-8');

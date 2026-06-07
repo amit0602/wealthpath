@@ -1,6 +1,20 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import type {
+  SendOtpResponse, VerifyOtpResponse,
+  UserProfile, FinancialProfile,
+  SubscriptionResponse,
+  FIREResult,
+  InvestmentsResponse, Investment, InvestmentAllocation, PortfolioSnapshot,
+  HealthScoreResult,
+  TaxComparisonResponse, TaxProfile,
+  EmergencyFundResponse,
+  InsuranceResponse,
+  FinancialGoal,
+  Loan, LoansResponse,
+  NotificationPreferences, NotificationLog,
+} from '../types/api';
 
 const BASE_URL = 'http://localhost:3000/api/v1';
 
@@ -67,123 +81,121 @@ api.interceptors.response.use(
 
 // Auth
 export const authApi = {
-  sendOtp: (phoneNumber: string) => api.post('/auth/send-otp', { phoneNumber }),
-  verifyOtp: (phoneNumber: string, otp: string) => api.post('/auth/verify-otp', { phoneNumber, otp }),
+  sendOtp: (phoneNumber: string) =>
+    api.post<SendOtpResponse>('/auth/send-otp', { phoneNumber }),
+  verifyOtp: (phoneNumber: string, otp: string) =>
+    api.post<VerifyOtpResponse>('/auth/verify-otp', { phoneNumber, otp }),
   logout: () => api.post('/auth/logout'),
 };
 
 // Users
 export const usersApi = {
-  getMe: () => api.get('/users/me'),
-  updateProfile: (data: any) => api.put('/users/me', data),
-  updateFinancialProfile: (data: any) => api.put('/users/me/financial-profile', data),
+  getMe: () => api.get<UserProfile>('/users/me'),
+  updateProfile: (data: Partial<UserProfile>) => api.put<UserProfile>('/users/me', data),
+  updateFinancialProfile: (data: Partial<FinancialProfile>) =>
+    api.put<FinancialProfile>('/users/me/financial-profile', data),
   exportData: () => api.get('/users/me/data-export'),
   deleteAccount: () => api.delete('/users/me'),
 };
 
 // FIRE
 export const fireApi = {
-  calculate: (data?: any) => api.post('/fire/calculate', data ?? {}),
-  getLatest: () => api.get('/fire/latest'),
+  calculate: (data?: Partial<FIREResult>) =>
+    api.post<FIREResult>('/fire/calculate', data ?? {}),
+  getLatest: () => api.get<FIREResult>('/fire/latest'),
 };
 
 // Investments
 export const investmentsApi = {
-  getAll: () => api.get('/investments'),
-  create: (data: any) => api.post('/investments', data),
-  update: (id: string, data: any) => api.put(`/investments/${id}`, data),
+  getAll: () => api.get<InvestmentsResponse>('/investments'),
+  create: (data: Omit<Investment, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) =>
+    api.post<Investment>('/investments', data),
+  update: (id: string, data: Partial<Omit<Investment, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) =>
+    api.put<Investment>(`/investments/${id}`, data),
   delete: (id: string) => api.delete(`/investments/${id}`),
-  getAllocation: () => api.get('/investments/allocation'),
-  getSnapshots: () => api.get('/investments/snapshots'),
+  getAllocation: () => api.get<InvestmentAllocation>('/investments/allocation'),
+  getSnapshots: () => api.get<PortfolioSnapshot[]>('/investments/snapshots'),
 };
 
 // Tax
 export const taxApi = {
-  getComparison: () => api.get('/tax/comparison'),
-  getProfile: () => api.get('/tax/profile'),
-  updateProfile: (data: any) => api.put('/tax/profile', data),
-  calculateHra: (data: any) => api.post('/tax/calculate-hra', data),
+  getComparison: () => api.get<TaxComparisonResponse>('/tax/comparison'),
+  getProfile: () => api.get<TaxProfile>('/tax/profile'),
+  updateProfile: (data: Partial<TaxProfile>) => api.put<TaxProfile>('/tax/profile', data),
+  calculateHra: (data: { basicSalary: number; hraReceived: number; rentPaid: number; cityType: 'metro' | 'non-metro' }) =>
+    api.post<{ exemptHra: number }>('/tax/calculate-hra', data),
 };
 
 // Health Score
 export const healthScoreApi = {
-  calculate: () => api.post('/health-score/calculate'),
-  getLatest: () => api.get('/health-score/latest'),
+  calculate: () => api.post<HealthScoreResult>('/health-score/calculate'),
+  getLatest: () => api.get<HealthScoreResult>('/health-score/latest'),
 };
 
 // Subscriptions
 export const subscriptionsApi = {
-  getMe: () => api.get('/subscriptions/me'),
-  createOrder: () => api.post('/subscriptions/create-order', { plan: 'monthly' }),
+  getMe: () => api.get<SubscriptionResponse>('/subscriptions/me'),
+  createOrder: () => api.post<{ orderId: string; amount: number; currency: string; keyId: string }>(
+    '/subscriptions/create-order', { plan: 'monthly' }),
   verifyPayment: (data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string }) =>
-    api.post('/subscriptions/verify-payment', data),
-  cancel: () => api.post('/subscriptions/cancel'),
-  devActivate: () => api.post('/subscriptions/dev-activate'),
+    api.post<{ message: string; expiresAt: string }>('/subscriptions/verify-payment', data),
+  cancel: () => api.post<{ message: string }>('/subscriptions/cancel'),
+  devActivate: () => api.post<{ message: string; plan: string; expiresAt: string }>('/subscriptions/dev-activate'),
 };
 
 // Loans
 export const loansApi = {
-  list: () => api.get('/loans'),
-  create: (data: {
-    name: string; loanType: string; outstandingBalance: number;
-    interestRate: number; remainingTenureMonths: number; emiAmount: number;
-  }) => api.post('/loans', data),
-  update: (id: string, data: {
-    name?: string; loanType?: string; outstandingBalance?: number;
-    interestRate?: number; remainingTenureMonths?: number; emiAmount?: number;
-  }) => api.put(`/loans/${id}`, data),
+  list: () => api.get<LoansResponse>('/loans'),
+  create: (data: Pick<Loan, 'name' | 'loanType' | 'outstandingBalance' | 'interestRate' | 'remainingTenureMonths' | 'emiAmount'>) =>
+    api.post<Loan>('/loans', data),
+  update: (id: string, data: Partial<Pick<Loan, 'name' | 'loanType' | 'outstandingBalance' | 'interestRate' | 'remainingTenureMonths' | 'emiAmount'>>) =>
+    api.put<Loan>(`/loans/${id}`, data),
   delete: (id: string) => api.delete(`/loans/${id}`),
 };
 
 // Emergency Fund
 export const emergencyFundApi = {
-  get: () => api.get('/emergency-fund/me'),
+  get: () => api.get<EmergencyFundResponse>('/emergency-fund/me'),
   upsert: (data: { liquidSavings: number; targetMonths?: number }) =>
-    api.put('/emergency-fund/me', data),
+    api.put<EmergencyFundResponse>('/emergency-fund/me', data),
 };
 
 // Insurance
 export const insuranceApi = {
-  get: () => api.get('/insurance/me'),
-  upsert: (data: {
-    hasTermInsurance?: boolean; termCoverAmount?: number; annualTermPremium?: number;
-    hasHealthInsurance?: boolean; healthCoverAmount?: number; annualHealthPremium?: number;
-  }) => api.put('/insurance/me', data),
+  get: () => api.get<InsuranceResponse>('/insurance/me'),
+  upsert: (data: Partial<Omit<InsuranceResponse, 'id' | 'userId'>>) =>
+    api.put<InsuranceResponse>('/insurance/me', data),
 };
 
 // MF Import
 export const mfImportApi = {
   upload: (formData: FormData) =>
-    api.post('/mf-import/upload', formData, {
+    api.post<{ sessionId: string; holdings: any[] }>('/mf-import/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   confirm: (sessionId: string, holdings: any[]) =>
-    api.post('/mf-import/confirm', { sessionId, holdings }),
+    api.post<{ imported: number }>('/mf-import/confirm', { sessionId, holdings }),
   getSessions: () => api.get('/mf-import/sessions'),
 };
 
 // Demat Sync
 export const dematSyncApi = {
   upload: (formData: FormData) =>
-    api.post('/demat-sync/upload', formData, {
+    api.post<{ sessionId: string; holdings: any[] }>('/demat-sync/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   confirm: (sessionId: string, holdings: any[]) =>
-    api.post('/demat-sync/confirm', { sessionId, holdings }),
+    api.post<{ imported: number }>('/demat-sync/confirm', { sessionId, holdings }),
   getSessions: () => api.get('/demat-sync/sessions'),
 };
 
 // Goals
 export const goalsApi = {
-  list: () => api.get('/goals'),
-  create: (data: {
-    name: string; targetAmount: number; targetYears: number;
-    currentSavings?: number; expectedReturnRate?: number;
-  }) => api.post('/goals', data),
-  update: (id: string, data: {
-    name?: string; targetAmount?: number; targetYears?: number;
-    currentSavings?: number; expectedReturnRate?: number;
-  }) => api.put(`/goals/${id}`, data),
+  list: () => api.get<FinancialGoal[]>('/goals'),
+  create: (data: Pick<FinancialGoal, 'name' | 'targetAmount' | 'targetYears' | 'currentSavings' | 'expectedReturnRate'>) =>
+    api.post<FinancialGoal>('/goals', data),
+  update: (id: string, data: Partial<Pick<FinancialGoal, 'name' | 'targetAmount' | 'targetYears' | 'currentSavings' | 'expectedReturnRate'>>) =>
+    api.put<FinancialGoal>(`/goals/${id}`, data),
   delete: (id: string) => api.delete(`/goals/${id}`),
 };
 
@@ -193,11 +205,8 @@ export const notificationsApi = {
     api.post('/notifications/token', { token, platform }),
   deregisterToken: (token: string) =>
     api.delete(`/notifications/token?token=${encodeURIComponent(token)}`),
-  getPreferences: () => api.get('/notifications/preferences'),
-  updatePreferences: (data: {
-    driftAlertsEnabled?: boolean;
-    taxRemindersEnabled?: boolean;
-    driftThresholdPercent?: number;
-  }) => api.put('/notifications/preferences', data),
-  getLogs: () => api.get('/notifications/logs'),
+  getPreferences: () => api.get<NotificationPreferences>('/notifications/preferences'),
+  updatePreferences: (data: Partial<NotificationPreferences>) =>
+    api.put<NotificationPreferences>('/notifications/preferences', data),
+  getLogs: () => api.get<NotificationLog[]>('/notifications/logs'),
 };

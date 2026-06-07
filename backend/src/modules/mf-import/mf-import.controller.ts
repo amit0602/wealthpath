@@ -14,6 +14,16 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { ConfirmImportDto } from './dto/confirm-import.dto';
 import { MfImportService } from './mf-import.service';
 
+// Inline type until @types/multer is confirmed installed
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  buffer: Buffer;
+  size: number;
+}
+
 @Controller('mf-import')
 @UseGuards(JwtAuthGuard)
 export class MfImportController {
@@ -38,7 +48,7 @@ export class MfImportController {
   )
   uploadCas(
     @Request() req: any,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: MulterFile,
   ) {
     if (!file) throw new BadRequestException('No file uploaded.');
     const content = file.buffer.toString('utf-8');
