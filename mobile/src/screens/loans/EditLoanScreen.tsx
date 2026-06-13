@@ -97,7 +97,7 @@ export function EditLoanScreen() {
 
     const payload = {
       name: name.trim(),
-      loanType,
+      loanType: loanType as import('../../types/api').LoanType,
       outstandingBalance: bal,
       interestRate: rate,
       remainingTenureMonths: tenure,

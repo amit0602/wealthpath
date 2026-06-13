@@ -12,7 +12,6 @@ import { MainStackParams } from '../../navigation/AppNavigator';
 export function ProfileScreen() {
   useSubscriptionGate();
   const [user, setUser] = useState<any>(null);
-  const [health, setHealth] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
   const { logout } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
@@ -48,37 +47,40 @@ export function ProfileScreen() {
     );
   };
 
-  const SCORE_COMPONENTS = [
-    { key: 'emergencyFund', label: 'Emergency Fund', weight: '20%' },
-    { key: 'insurance', label: 'Insurance Coverage', weight: '20%' },
-    { key: 'debtRatio', label: 'Debt-to-Income', weight: '15%' },
-    { key: 'savingsRate', label: 'Savings Rate', weight: '25%' },
-    { key: 'retirementTrack', label: 'Retirement Track', weight: '20%' },
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Profile</Text>
 
         {user && (
-          <View style={styles.profileCard}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{user.fullName?.[0]?.toUpperCase() ?? '?'}</Text>
+          <>
+            <View style={styles.profileCard}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{user.fullName?.[0]?.toUpperCase() ?? '?'}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>{user.fullName || 'Complete your profile'}</Text>
+                <Text style={styles.phone}>{user.phoneNumber}</Text>
+                {user.subscription?.plan === 'premium' && (
+                  <View style={styles.planBadgePremium}>
+                    <Text style={styles.planBadgeIcon}>⭐</Text>
+                    <Text style={[styles.planText, { color: '#92400E' }]}>Premium</Text>
+                  </View>
+                )}
+              </View>
             </View>
-            <View>
-              <Text style={styles.name}>{user.fullName || 'Complete your profile'}</Text>
-              <Text style={styles.phone}>{user.phoneNumber}</Text>
-              <TouchableOpacity
-                style={[styles.planBadge, user.subscription?.plan === 'premium' && styles.planBadgePremium]}
-                onPress={() => navigation.navigate('Subscription')}
-              >
-                <Text style={styles.planText}>
-                  {user.subscription?.plan === 'premium' ? '⭐ Premium' : 'Free Plan — Upgrade ›'}
-                </Text>
+            {user.subscription?.plan !== 'premium' && (
+              <TouchableOpacity style={styles.upsellCard} onPress={() => navigation.navigate('Subscription')}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <Text style={styles.upsellTitle}>Unlock Premium</Text>
+                  <Text style={styles.upsellSub} numberOfLines={1}>Advanced tax optimisation · Unlimited goals</Text>
+                </View>
+                <View style={styles.upsellCta}>
+                  <Text style={styles.upsellCtaText}>Upgrade →</Text>
+                </View>
               </TouchableOpacity>
-            </View>
-          </View>
+            )}
+          </>
         )}
 
         {user?.financialProfile && (
@@ -142,22 +144,18 @@ export function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingRow} onPress={() => navigation.navigate('NotificationPreferences')}>
-            <View>
-              <Text style={styles.settingLabel}>🔔 Notification Preferences</Text>
-              <Text style={styles.settingSubtitle}>Drift alerts, tax reminders, sensitivity</Text>
-            </View>
-            <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
-
           {[
-            { label: '📊 Export Raw Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
-            { label: '🔒 Security Log', subtitle: 'View recent login activity', action: () => {} },
-          ].map(({ label, subtitle, action }) => (
+            { icon: '🔔', label: 'Notification Preferences', subtitle: 'Drift alerts, tax reminders, sensitivity', action: () => navigation.navigate('NotificationPreferences') },
+            { icon: '📊', label: 'Export Raw Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
+            { icon: '🔒', label: 'Security Log', subtitle: 'View recent login activity', action: () => {} },
+          ].map(({ icon, label, subtitle, action }) => (
             <TouchableOpacity key={label} style={styles.settingRow} onPress={action}>
-              <View>
-                <Text style={styles.settingLabel}>{label}</Text>
-                <Text style={styles.settingSubtitle}>{subtitle}</Text>
+              <View style={styles.settingRowLeft}>
+                <Text style={styles.settingRowIcon}>{icon}</Text>
+                <View>
+                  <Text style={styles.settingLabel}>{label}</Text>
+                  <Text style={styles.settingSubtitle}>{subtitle}</Text>
+                </View>
               </View>
               <Text style={styles.chevron}>›</Text>
             </TouchableOpacity>
@@ -190,15 +188,22 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 24, fontWeight: '700', color: '#fff' },
   name: { fontSize: 17, fontWeight: '700', color: '#111827' },
   phone: { fontSize: 14, color: '#6B7280', marginTop: 2 },
-  planBadge: { marginTop: 6, backgroundColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
-  planBadgePremium: { backgroundColor: '#FEF3C7' },
+  planBadgePremium: { marginTop: 6, backgroundColor: '#FEF3C7', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4 },
+  planBadgeIcon: { fontSize: 12 },
   planText: { fontSize: 12, color: '#374151', fontWeight: '600' },
+  upsellCard: { marginTop: 8, backgroundColor: '#1B4332', borderRadius: 12, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  upsellTitle: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  upsellSub: { fontSize: 10, color: '#6EE7B7', marginTop: 1 },
+  upsellCta: { backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 },
+  upsellCtaText: { fontSize: 12, fontWeight: '700', color: '#1B4332' },
   section: { backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 10, elevation: 1 },
   sectionTitle: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 2 },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   rowLabel: { fontSize: 14, color: '#6B7280' },
   rowValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 48, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  settingRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  settingRowIcon: { fontSize: 18 },
   settingLabel: { fontSize: 15, color: '#111827' },
   settingSubtitle: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
   chevron: { fontSize: 20, color: '#9CA3AF' },

@@ -28,7 +28,7 @@ export function SavingsSnapshotScreen({ navigation }: Props) {
       await Promise.all(
         entries.map(([type, value]) =>
           investmentsApi.create({
-            instrumentType: type,
+            instrumentType: type as import("../../types/api").InstrumentType,
             name: INSTRUMENTS.find(i => i.type === type)?.label ?? type,
             currentValue: Number(value),
           }),

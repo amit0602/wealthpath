@@ -1,6 +1,6 @@
 /**
  * Typed API response shapes for WealthPath.
- * Keep in sync with the NestJS DTOs in backend/src/modules/*/
+ * Keep in sync with the NestJS DTOs in backend/src/modules/{module}/
  */
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
@@ -17,28 +17,36 @@ export interface VerifyOtpResponse {
 }
 
 // ─── Users ────────────────────────────────────────────────────────────────────
+export interface FinancialProfile {
+  id: string;
+  userId: string;
+  monthlyGrossIncome: number;
+  monthlyTakeHome: number;
+  monthlyExpenses: number;
+  monthlyEmi: number;
+  dependentsCount: number;
+  riskAppetite: string; // 'conservative' | 'moderate' | 'aggressive'
+  targetRetirementAge: number;
+  desiredMonthlyIncome: number;
+  retirementCity: string;
+  retirementCityTier: string;
+  inflationAssumption: number;
+  expectedReturnPre: number;
+  expectedReturnPost: number;
+  withdrawalRate: number;
+  lifeExpectancy: number;
+}
+
 export interface UserProfile {
   id: string;
   phoneNumber: string;
-  name: string | null;
+  fullName: string;
   dateOfBirth: string | null;
-  city: string | null;
-  employmentType: string | null;
-  isOnboardingComplete: boolean;
+  city: string;
+  cityTier: string;
+  employmentType: string;
   createdAt: string;
-}
-
-export interface FinancialProfile {
-  monthlyIncome: number;
-  monthlyExpenses: number;
-  monthlyEmi: number;
-  numberOfDependents: number;
-  existingCorpus: number;
-  monthlyInvestment: number;
-  currentAge: number;
-  retirementAge: number;
-  desiredMonthlyIncomeInRetirement: number;
-  riskAppetite: 'conservative' | 'moderate' | 'aggressive';
+  financialProfile: FinancialProfile | null;
 }
 
 // ─── Subscriptions ────────────────────────────────────────────────────────────
@@ -57,24 +65,16 @@ export interface SubscriptionResponse {
 }
 
 // ─── FIRE ─────────────────────────────────────────────────────────────────────
-export interface FIREAssumptions {
-  inflationRate: number;
-  preRetirementReturn: number;
-  postRetirementReturn: number;
-  withdrawalRate: number;
-  lifeExpectancy: number;
-}
-
 export interface FIREResult {
   corpusRequired: number;
-  corpusFv: number;
+  currentCorpusFutureValue: number;
+  existingSipFutureValue: number;
   corpusGap: number;
   monthlySipRequired: number;
-  fiYearsAway: number;
-  targetRetirementAge: number;
-  fireAchievable: boolean;
-  monthlyExpensesInRetirement: number;
-  assumptions: FIREAssumptions;
+  yearsToFire: number;
+  fireAge: number;
+  projections: Array<{ year: number; corpus: number }>;
+  calculationInputs?: string; // JSON string
   createdAt: string;
 }
 
@@ -90,11 +90,15 @@ export interface Investment {
   name: string;
   instrumentType: InstrumentType;
   currentValue: number;
-  purchaseValue: number | null;
   monthlyContribution: number;
   annualContribution: number;
   expectedReturnRate: number;
+  interestRate: number | null;
+  startDate: string | null;
+  maturityDate: string | null;
   lockInUntil: string | null;
+  notes: string | null;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -122,12 +126,12 @@ export interface InvestmentsResponse {
 
 export interface PortfolioSnapshot {
   month: string; // "YYYY-MM"
-  totalValue: number;
+  totalCorpus: number;
 }
 
 // ─── Health Score ─────────────────────────────────────────────────────────────
 export interface HealthScoreBreakdown {
-  savings: number;
+  savingsRate: number;
   insurance: number;
   debtManagement: number;
   emergencyFund: number;
@@ -135,60 +139,53 @@ export interface HealthScoreBreakdown {
 }
 
 export interface HealthScoreResult {
-  totalScore: number;
+  overallScore: number;
   breakdown: HealthScoreBreakdown;
-  label: string;
   createdAt: string;
 }
 
 // ─── Tax ──────────────────────────────────────────────────────────────────────
-export interface TaxRegimeResult {
-  grossIncome: number;
-  totalDeductions: number;
-  taxableIncome: number;
-  taxBeforeRebate: number;
-  rebate87A: number;
-  taxAfterRebate: number;
-  surcharge: number;
-  cess: number;
-  totalTax: number;
-  effectiveRate: number;
-}
-
 export interface TaxComparisonResponse {
   financialYear: string;
-  oldRegime: TaxRegimeResult;
-  newRegime: TaxRegimeResult;
-  recommendation: 'old' | 'new';
-  saving: number;
-  deductions80C: number;
-  deductions80D: number;
-  deductions80CCD1B: number;
+  grossSalary: number;
+  oldRegimeTax: number;
+  newRegimeTax: number;
+  recommendedRegime: 'old' | 'new';
+  savings: number;
+  oldRegimeTaxableIncome: number;
+  newRegimeTaxableIncome: number;
+  effectiveOldRate: number;
+  effectiveNewRate: number;
+  section80cRemaining: number;
+  section80c: number;
+  section80d: number;
+  section80ccd1b: number;
   homeLoanInterest: number;
 }
 
 export interface TaxProfile {
-  annualSalary: number;
+  grossSalary: number;
   hraReceived: number;
   rentPaid: number;
-  cityType: 'metro' | 'non-metro';
-  deductions80C: number;
-  deductions80D: number;
-  deductions80CCD1B: number;
+  isMetro: boolean;
+  section80cUsed: number;
+  section80dUsed: number;
+  section80ccd1bUsed: number;
   homeLoanInterest: number;
+  recommendedRegime: string | null;
+  oldRegimeTax: number | null;
+  newRegimeTax: number | null;
 }
 
 // ─── Emergency Fund ───────────────────────────────────────────────────────────
 export interface EmergencyFundResponse {
-  id: string;
-  userId: string;
   liquidSavings: number;
   targetMonths: number;
   monthlyExpenses: number;
   monthsCovered: number;
   targetAmount: number;
   shortfall: number;
-  progressPercent: number;
+  progressPct: number;
 }
 
 // ─── Insurance ────────────────────────────────────────────────────────────────
@@ -212,9 +209,8 @@ export interface FinancialGoal {
   targetYears: number;
   currentSavings: number;
   expectedReturnRate: number;
-  // Computed by backend
-  monthlyRequiredSip: number;
-  amountStillNeeded: number;
+  monthlySip: number;
+  progressPct: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -231,18 +227,24 @@ export interface Loan {
   interestRate: number;
   remainingTenureMonths: number;
   emiAmount: number;
-  // Computed by backend
+  // Computed by backend enrichLoan()
   totalInterestPayable: number;
   payoffDate: string;
+  avalancheFirst?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface LoansResponse {
-  loans: Loan[];
+export interface LoansSummary {
   totalOutstanding: number;
   totalMonthlyEmi: number;
-  recommendation: string;
+  totalInterestPayable: number;
+  loanCount: number;
+}
+
+export interface LoansResponse {
+  loans: Loan[];
+  summary: LoansSummary;
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────
@@ -259,4 +261,33 @@ export interface NotificationLog {
   type: string;
   sentAt: string;
   status: string;
+}
+
+// ─── MF Import / Demat Sync ───────────────────────────────────────────────────
+export interface MfHolding {
+  name: string;
+  instrumentType: string;
+  currentValue: number;
+  units: number | null;
+  nav: number | null;
+  folioNumber: string | null;
+}
+
+export interface MfImportUploadResponse {
+  sessionId: string;
+  holdings: MfHolding[];
+}
+
+export interface DematHolding {
+  name: string;
+  isin: string | null;
+  quantity: number;
+  currentValue: number;
+  exchange: string | null;
+}
+
+export interface DematUploadResponse {
+  sessionId: string;
+  holdings: DematHolding[];
+  depository: string | null;
 }

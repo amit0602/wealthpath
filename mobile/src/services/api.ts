@@ -108,7 +108,7 @@ export const fireApi = {
 // Investments
 export const investmentsApi = {
   getAll: () => api.get<InvestmentsResponse>('/investments'),
-  create: (data: Omit<Investment, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) =>
+  create: (data: Pick<Investment, 'name' | 'instrumentType' | 'currentValue'> & Partial<Omit<Investment, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) =>
     api.post<Investment>('/investments', data),
   update: (id: string, data: Partial<Omit<Investment, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) =>
     api.put<Investment>(`/investments/${id}`, data),
@@ -181,7 +181,7 @@ export const mfImportApi = {
 // Demat Sync
 export const dematSyncApi = {
   upload: (formData: FormData) =>
-    api.post<{ sessionId: string; holdings: any[] }>('/demat-sync/upload', formData, {
+    api.post<{ sessionId: string; holdings: any[]; depository: string | null }>('/demat-sync/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   confirm: (sessionId: string, holdings: any[]) =>

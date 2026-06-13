@@ -53,6 +53,19 @@ export function TaxPlannerScreen() {
           ))}
         </View>
 
+        {!tax && (
+          <TouchableOpacity style={styles.emptyCard} onPress={() => navigation.navigate('EditTaxProfile')}>
+            <Text style={styles.emptyIcon}>🧾</Text>
+            <Text style={styles.emptyTitle}>Set up your tax profile</Text>
+            <Text style={styles.emptySub}>
+              Add your salary, HRA, 80C investments and deductions to compare Old vs New regime and see which saves you more.
+            </Text>
+            <View style={styles.emptyButton}>
+              <Text style={styles.emptyButtonText}>Add Tax Details</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {tax && activeTab === 'comparison' && (
           <>
             {tax.recommendedRegime && (
@@ -165,4 +178,17 @@ const styles = StyleSheet.create({
   deductionLimit: { fontSize: 13, fontWeight: '700', color: '#1B4332' },
   disclaimerBox: { backgroundColor: '#FEF9C3', borderRadius: 10, padding: 12 },
   disclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
+
+  // Empty state
+  emptyCard: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8, elevation: 1,
+  },
+  emptyIcon: { fontSize: 40, marginBottom: 4 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  emptySub: { fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 19 },
+  emptyButton: {
+    marginTop: 6, backgroundColor: '#1B4332', borderRadius: 10,
+    paddingHorizontal: 20, paddingVertical: 10,
+  },
+  emptyButtonText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
