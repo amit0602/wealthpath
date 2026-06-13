@@ -514,6 +514,7 @@ const styles = StyleSheet.create({
   projectionRowLabel: { fontSize: 15, fontWeight: '700', color: '#111827' },
   projectionRowSub: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
   projectionRowChevron: { fontSize: 22, color: '#9CA3AF' },
+
   disclaimerBox: { backgroundColor: '#FEF9C3', borderRadius: 10, padding: 12 },
   disclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
   goalsCard: { backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 12, elevation: 1 },

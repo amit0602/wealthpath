@@ -130,7 +130,7 @@ export function DashboardScreen() {
           {health && (
             <View style={styles.statTile}>
               <Text style={styles.statLabel}>Health Score</Text>
-              <Text style={[styles.statValue, { color: health.overallScore >= 70 ? '#10B981' : health.overallScore >= 40 ? '#F59E0B' : '#EF4444' }]} numberOfLines={1} adjustsFontSizeToFit>
+              <Text style={[styles.statValue, { color: health.overallScore >= 70 ? '#10B981' : health.overallScore >= 40 ? '#F59E0B' : '#EF4444' }]} numberOfLines={1}>
                 {health.overallScore}<Text style={styles.statUnit}>/100</Text>
               </Text>
               <Text style={styles.statCaption}>{health.overallScore >= 70 ? 'Healthy' : health.overallScore >= 40 ? 'Needs Work' : 'Critical'}</Text>
@@ -139,7 +139,7 @@ export function DashboardScreen() {
           {fire && (
             <View style={styles.statTile}>
               <Text style={styles.statLabel}>Monthly SIP</Text>
-              <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>{formatINR(Number(fire.monthlySipRequired))}</Text>
+              <Text style={styles.statValue} numberOfLines={1}>{formatINR(Number(fire.monthlySipRequired))}</Text>
               <Text style={styles.statCaption}>needed/month</Text>
             </View>
           )}
@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 18, fontWeight: '800', color: '#111827' },
   statUnit: { fontSize: 14, fontWeight: '400', color: '#9CA3AF' },
   statCaption: { fontSize: 12, color: '#6B7280' },
+
   portfolioHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   portfolioValue: { fontSize: 28, fontWeight: '800', color: '#111827', marginTop: 2 },
   trendBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },

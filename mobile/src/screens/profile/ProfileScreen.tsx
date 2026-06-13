@@ -8,12 +8,10 @@ import { useAuthStore } from '../../store/authStore';
 import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
 import { exportPdfReport } from '../../utils/generateReport';
 import { MainStackParams } from '../../navigation/AppNavigator';
-import { Icon } from '../../components/Icon';
 
 export function ProfileScreen() {
   useSubscriptionGate();
   const [user, setUser] = useState<any>(null);
-  const [health, setHealth] = useState<any>(null);
   const [exporting, setExporting] = useState(false);
   const { logout } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParams>>();
@@ -49,14 +47,6 @@ export function ProfileScreen() {
     );
   };
 
-  const SCORE_COMPONENTS = [
-    { key: 'emergencyFund', label: 'Emergency Fund', weight: '20%' },
-    { key: 'insurance', label: 'Insurance Coverage', weight: '20%' },
-    { key: 'debtRatio', label: 'Debt-to-Income', weight: '15%' },
-    { key: 'savingsRate', label: 'Savings Rate', weight: '25%' },
-    { key: 'retirementTrack', label: 'Retirement Track', weight: '20%' },
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -73,7 +63,7 @@ export function ProfileScreen() {
                 <Text style={styles.phone}>{user.phoneNumber}</Text>
                 {user.subscription?.plan === 'premium' && (
                   <View style={styles.planBadgePremium}>
-                    <Icon name="star" size={14} color="#92400E" />
+                    <Text style={styles.planBadgeIcon}>⭐</Text>
                     <Text style={[styles.planText, { color: '#92400E' }]}>Premium</Text>
                   </View>
                 )}
@@ -144,7 +134,7 @@ export function ProfileScreen() {
               </View>
             ) : (
               <View style={styles.exportInner}>
-                <Icon name="document" size={22} color="#fff" />
+                <Text style={styles.exportIcon}>📄</Text>
                 <View>
                   <Text style={styles.exportButtonText}>Export PDF Report</Text>
                   <Text style={styles.exportButtonSub}>FIRE plan · Portfolio · Tax comparison</Text>
@@ -155,13 +145,13 @@ export function ProfileScreen() {
           </TouchableOpacity>
 
           {[
-            { icon: 'bell' as const, label: 'Notification Preferences', subtitle: 'Drift alerts, tax reminders, sensitivity', action: () => navigation.navigate('NotificationPreferences') },
-            { icon: 'chart' as const, label: 'Export Raw Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
-            { icon: 'lock' as const, label: 'Security Log', subtitle: 'View recent login activity', action: () => {} },
+            { icon: '🔔', label: 'Notification Preferences', subtitle: 'Drift alerts, tax reminders, sensitivity', action: () => navigation.navigate('NotificationPreferences') },
+            { icon: '📊', label: 'Export Raw Data', subtitle: 'DPDP right to data portability', action: () => usersApi.exportData() },
+            { icon: '🔒', label: 'Security Log', subtitle: 'View recent login activity', action: () => {} },
           ].map(({ icon, label, subtitle, action }) => (
             <TouchableOpacity key={label} style={styles.settingRow} onPress={action}>
               <View style={styles.settingRowLeft}>
-                <Icon name={icon} size={18} color="#6B7280" />
+                <Text style={styles.settingRowIcon}>{icon}</Text>
                 <View>
                   <Text style={styles.settingLabel}>{label}</Text>
                   <Text style={styles.settingSubtitle}>{subtitle}</Text>
@@ -199,6 +189,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 17, fontWeight: '700', color: '#111827' },
   phone: { fontSize: 14, color: '#6B7280', marginTop: 2 },
   planBadgePremium: { marginTop: 6, backgroundColor: '#FEF3C7', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4 },
+  planBadgeIcon: { fontSize: 12 },
   planText: { fontSize: 12, color: '#374151', fontWeight: '600' },
   upsellCard: { marginTop: 8, backgroundColor: '#1B4332', borderRadius: 12, padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   upsellTitle: { fontSize: 13, fontWeight: '700', color: '#fff' },
@@ -212,12 +203,14 @@ const styles = StyleSheet.create({
   rowValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
   settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 48, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   settingRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  settingRowIcon: { fontSize: 18 },
   settingLabel: { fontSize: 15, color: '#111827' },
   settingSubtitle: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
   chevron: { fontSize: 20, color: '#9CA3AF' },
   exportButton: { backgroundColor: '#1B4332', borderRadius: 12, padding: 14 },
   exportButtonDisabled: { opacity: 0.6 },
   exportInner: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  exportIcon: { fontSize: 22 },
   exportButtonText: { fontSize: 15, fontWeight: '700', color: '#fff', flex: 1 },
   exportButtonSub: { fontSize: 11, color: '#6EE7B7', marginTop: 2 },
   logoutButton: { backgroundColor: '#F3F4F6', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
