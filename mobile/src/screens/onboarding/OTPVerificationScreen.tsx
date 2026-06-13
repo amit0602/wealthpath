@@ -96,7 +96,12 @@ export function OTPVerificationScreen({ navigation, route }: Props) {
           ))}
         </View>
 
-        {loading && <ActivityIndicator color="#1B4332" style={{ marginTop: 24 }} />}
+        {loading && (
+          <View style={styles.verifyingRow}>
+            <ActivityIndicator color="#1B4332" />
+            <Text style={styles.verifyingText}>Verifying your OTP…</Text>
+          </View>
+        )}
 
         <TouchableOpacity onPress={handleResend} disabled={resendTimer > 0} style={styles.resend}>
           <Text style={[styles.resendText, resendTimer > 0 && styles.resendDisabled]}>
@@ -123,5 +128,7 @@ const styles = StyleSheet.create({
   resend: { marginTop: 32, alignItems: 'center' },
   resendText: { fontSize: 15, color: '#1B4332', fontWeight: '600' },
   resendDisabled: { color: '#9CA3AF' },
-  devHint: { marginTop: 24, textAlign: 'center', fontSize: 12, color: '#9CA3AF' },
+  verifyingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 24, justifyContent: 'center' },
+  verifyingText: { fontSize: 14, color: '#6B7280' },
+  devHint: { marginTop: 16, textAlign: 'center', fontSize: 12, color: '#9CA3AF' },
 });

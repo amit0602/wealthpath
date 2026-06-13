@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   RefreshControl,
   Alert,
+  ActionSheetIOS,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -126,17 +128,30 @@ export function InvestmentsScreen() {
         {/* Header row */}
         <View style={styles.headerRow}>
           <Text style={styles.title}>Investments</Text>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.importButton} onPress={() => navigation.navigate('DematSync')}>
-              <Text style={styles.importButtonText}>⟳ Demat</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.importButton} onPress={() => navigation.navigate('MfImport')}>
-              <Text style={styles.importButtonText}>↑ MF</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate('EditInvestment', {})}>
-              <Text style={styles.addButtonText}>+ Add</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              if (Platform.OS === 'ios') {
+                ActionSheetIOS.showActionSheetWithOptions(
+                  { options: ['Cancel', 'Add manually', 'Import MF (CAMS / KFintech)', 'Sync Demat (CDSL / NSDL)'], cancelButtonIndex: 0 },
+                  (idx) => {
+                    if (idx === 1) navigation.navigate('EditInvestment', {});
+                    if (idx === 2) navigation.navigate('MfImport');
+                    if (idx === 3) navigation.navigate('DematSync');
+                  },
+                );
+              } else {
+                Alert.alert('Add Investment', 'Choose how to add', [
+                  { text: 'Add manually', onPress: () => navigation.navigate('EditInvestment', {}) },
+                  { text: 'Import MF (CAMS / KFintech)', onPress: () => navigation.navigate('MfImport') },
+                  { text: 'Sync Demat (CDSL / NSDL)', onPress: () => navigation.navigate('DematSync') },
+                  { text: 'Cancel', style: 'cancel' },
+                ]);
+              }
+            }}
+          >
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </TouchableOpacity>
         </View>
 
         {summary && (
@@ -192,10 +207,26 @@ export function InvestmentsScreen() {
         <Text style={styles.sectionTitle}>Your Investments</Text>
 
         {investments.length === 0 ? (
-          <TouchableOpacity style={styles.emptyCard} onPress={() => navigation.navigate('EditInvestment', {})}>
-            <Text style={styles.emptyText}>No investments added yet</Text>
-            <Text style={styles.emptySub}>Tap here to add your first investment</Text>
-          </TouchableOpacity>
+          <View style={styles.emptyCard}>
+            <Text style={styles.emptyIcon}>💰</Text>
+            <Text style={styles.emptyTitle}>No investments yet</Text>
+            <Text style={styles.emptySub}>
+              Add your MF, EPF, PPF, stocks, FD, NPS and more. WealthPath tracks everything in one place.
+            </Text>
+            <View style={styles.emptySteps}>
+              {[
+                { icon: '📂', label: 'Import MF from CAMS / KFintech', action: () => navigation.navigate('MfImport') },
+                { icon: '📈', label: 'Sync Demat (CDSL / NSDL)', action: () => navigation.navigate('DematSync') },
+                { icon: '✏️', label: 'Add manually', action: () => navigation.navigate('EditInvestment', {}) },
+              ].map(({ icon, label, action }) => (
+                <TouchableOpacity key={label} style={styles.emptyStep} onPress={action}>
+                  <Text style={styles.emptyStepIcon}>{icon}</Text>
+                  <Text style={styles.emptyStepLabel}>{label}</Text>
+                  <Text style={styles.emptyStepArrow}>›</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
         ) : (
           investments.map((inv: any) => (
             <InvestmentCard
@@ -215,13 +246,7 @@ const styles = StyleSheet.create({
   content: { padding: 20, gap: 14, paddingBottom: 32 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { flex: 1, fontSize: 22, fontWeight: '800', color: '#111827' },
-  headerButtons: { flexDirection: 'row', gap: 6 },
-  importButton: {
-    backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#1B4332',
-  },
-  importButtonText: { fontSize: 12, fontWeight: '700', color: '#1B4332' },
-  addButton: { backgroundColor: '#1B4332', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  addButton: { backgroundColor: '#1B4332', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 7 },
   addButtonText: { fontSize: 12, fontWeight: '700', color: '#fff' },
 
   // Total portfolio card
@@ -245,9 +270,18 @@ const styles = StyleSheet.create({
   legendText: { fontSize: 12, color: '#374151', textTransform: 'capitalize' },
 
   // Empty state
-  emptyCard: { backgroundColor: '#fff', borderRadius: 14, padding: 32, alignItems: 'center', elevation: 1 },
-  emptyText: { fontSize: 16, fontWeight: '600', color: '#374151' },
-  emptySub: { fontSize: 13, color: '#9CA3AF', marginTop: 4 },
+  emptyCard: { backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8, elevation: 1 },
+  emptyIcon: { fontSize: 40, marginBottom: 4 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  emptySub: { fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 19 },
+  emptySteps: { width: '100%', marginTop: 8, gap: 4 },
+  emptyStep: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#F9FAFB', borderRadius: 10, padding: 12,
+  },
+  emptyStepIcon: { fontSize: 18 },
+  emptyStepLabel: { flex: 1, fontSize: 14, color: '#374151', fontWeight: '500' },
+  emptyStepArrow: { fontSize: 16, color: '#9CA3AF' },
 
   // Investment card
   investmentCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, gap: 8, elevation: 1 },

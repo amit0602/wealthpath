@@ -16,20 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fireApi, goalsApi } from '../../services/api';
 import { MainStackParams } from '../../navigation/AppNavigator';
 import { useSubscriptionGate } from '../../hooks/useSubscriptionGate';
-
-const formatCrore = (val: number) => {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(2)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
-
-const formatDelta = (val: number, prefix = '') => {
-  const abs = Math.abs(val);
-  const sign = val >= 0 ? '+' : '−';
-  if (abs >= 10000000) return `${sign}${prefix}${(abs / 10000000).toFixed(2)} Cr`;
-  if (abs >= 100000) return `${sign}${prefix}${(abs / 100000).toFixed(1)} L`;
-  return `${sign}${prefix}${abs.toLocaleString('en-IN')}`;
-};
+import { formatINR, formatINRDelta } from '../../utils/money';
 
 interface WhatIfState {
   extraSip: number;       // ₹ per month
@@ -45,11 +32,7 @@ const RETURN_DELTA_MIN = -3;
 const RETURN_DELTA_MAX = 4;
 const RETURN_DELTA_STEP = 0.5;
 
-const formatCroreGoal = (val: number) => {
-  if (val >= 10000000) return `₹${(val / 10000000).toFixed(1)} Cr`;
-  if (val >= 100000) return `₹${(val / 100000).toFixed(1)} L`;
-  return `₹${val.toLocaleString('en-IN')}`;
-};
+// formatINR from money.ts used for all currency — goal display uses decimals: 1
 
 export function FIREScreen() {
   useSubscriptionGate();
@@ -169,12 +152,28 @@ export function FIREScreen() {
 
         {loading && <ActivityIndicator color="#1B4332" />}
 
+        {!result && !loading && (
+          <TouchableOpacity
+            style={styles.emptyCard}
+            onPress={() => navigation.navigate('EditInvestment', {})}
+          >
+            <Text style={styles.emptyIcon}>🔥</Text>
+            <Text style={styles.emptyTitle}>Your FIRE number awaits</Text>
+            <Text style={styles.emptySub}>
+              Add at least one investment to calculate how much corpus you need and your monthly SIP target.
+            </Text>
+            <View style={styles.emptyButton}>
+              <Text style={styles.emptyButtonText}>+ Add Investment</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {result && !loading && (
           <>
             {/* Primary result */}
             <View style={styles.heroCard}>
               <Text style={styles.heroLabel}>Corpus Required</Text>
-              <Text style={styles.heroValue}>{formatCrore(Number(result.corpusRequired))}</Text>
+              <Text style={styles.heroValue}>{formatINR(Number(result.corpusRequired))}</Text>
               <Text style={styles.heroSub}>
                 To retire at age {result.fireAge} with{' '}
                 {overrides.withdrawalRate || '3.33'}% withdrawal rate
@@ -184,14 +183,14 @@ export function FIREScreen() {
             <View style={styles.metricsRow}>
               <View style={styles.metricCard}>
                 <Text style={styles.metricLabel}>Additional SIP Needed</Text>
-                <Text style={styles.metricValue}>
-                  {formatCrore(Number(result.monthlySipRequired))}/mo
+                <Text style={styles.metricValue} numberOfLines={1}>
+                  {formatINR(Number(result.monthlySipRequired))}/mo
                 </Text>
               </View>
               <View style={styles.metricCard}>
                 <Text style={styles.metricLabel}>Corpus Gap</Text>
-                <Text style={[styles.metricValue, { color: Number(result.corpusGap) > 0 ? '#EF4444' : '#10B981' }]}>
-                  {Number(result.corpusGap) > 0 ? formatCrore(Number(result.corpusGap)) : 'On Track ✓'}
+                <Text style={[styles.metricValue, { color: Number(result.corpusGap) > 0 ? '#EF4444' : '#10B981' }]} numberOfLines={1}>
+                  {Number(result.corpusGap) > 0 ? formatINR(Number(result.corpusGap)) : 'On Track ✓'}
                 </Text>
               </View>
             </View>
@@ -341,11 +340,11 @@ export function FIREScreen() {
                       <View style={styles.comparisonItem}>
                         <Text style={styles.comparisonLabel}>Corpus Gap</Text>
                         <Text style={[styles.comparisonNew, { color: newGap <= baseGap ? '#10B981' : '#EF4444' }]}>
-                          {newGap > 0 ? formatCrore(newGap) : 'On Track ✓'}
+                          {newGap > 0 ? formatINR(newGap) : 'On Track ✓'}
                         </Text>
                         {baseGap !== newGap && (
                           <Text style={[styles.comparisonDelta, { color: newGap <= baseGap ? '#10B981' : '#EF4444' }]}>
-                            {formatDelta(newGap - baseGap, '₹')}
+                            {formatINRDelta(newGap - baseGap)}
                           </Text>
                         )}
                       </View>
@@ -353,11 +352,11 @@ export function FIREScreen() {
                       <View style={styles.comparisonItem}>
                         <Text style={styles.comparisonLabel}>Add. SIP Needed</Text>
                         <Text style={[styles.comparisonNew, { color: newSip <= baseSip ? '#10B981' : '#EF4444' }]}>
-                          {formatCrore(newSip)}/mo
+                          {formatINR(newSip)}/mo
                         </Text>
                         {baseSip !== newSip && (
                           <Text style={[styles.comparisonDelta, { color: newSip <= baseSip ? '#10B981' : '#EF4444' }]}>
-                            {formatDelta(newSip - baseSip, '₹')}/mo
+                            {formatINRDelta(newSip - baseSip)}/mo
                           </Text>
                         )}
                       </View>
@@ -379,22 +378,23 @@ export function FIREScreen() {
               })()}
             </View>
 
-            {/* Year-by-year table */}
-            <View style={styles.tableCard}>
-              <Text style={styles.tableTitle}>Year-by-Year Projection</Text>
-              <View style={styles.tableHeader}>
-                <Text style={[styles.th, { flex: 1 }]}>Year</Text>
-                <Text style={[styles.th, { flex: 1 }]}>Age</Text>
-                <Text style={[styles.th, { flex: 2 }]}>Portfolio</Text>
-              </View>
-              {result.projections?.slice(0, 20).map((p: any) => (
-                <View key={p.year} style={[styles.tableRow, p.isFireYear && styles.fireRow]}>
-                  <Text style={[styles.td, { flex: 1 }]}>{p.year}</Text>
-                  <Text style={[styles.td, { flex: 1 }]}>{p.age}</Text>
-                  <Text style={[styles.td, { flex: 2 }, p.isFireYear && styles.fireTd]}>{formatCrore(Number(p.portfolioValue))}</Text>
+            {/* Drill-down to year-by-year projection */}
+            {result.projections?.length > 0 && (
+              <TouchableOpacity
+                style={styles.projectionRow}
+                onPress={() => navigation.navigate('FIREProjection', {
+                  projections: result.projections,
+                  corpusRequired: Number(result.corpusRequired),
+                  fireAge: result.fireAge,
+                })}
+              >
+                <View>
+                  <Text style={styles.projectionRowLabel}>Year-by-Year Projection</Text>
+                  <Text style={styles.projectionRowSub}>{result.projections.length} years · target at age {result.fireAge}</Text>
                 </View>
-              ))}
-            </View>
+                <Text style={styles.projectionRowChevron}>›</Text>
+              </TouchableOpacity>
+            )}
 
             {/* Financial Goals */}
             <View style={styles.goalsCard}>
@@ -429,12 +429,12 @@ export function FIREScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={styles.goalRowName}>{goal.name}</Text>
                       <Text style={styles.goalRowMeta}>
-                        {goal.targetYears} {goal.targetYears === 1 ? 'yr' : 'yrs'} · Target {formatCroreGoal(goal.targetAmount)}
+                        {goal.targetYears} {goal.targetYears === 1 ? 'yr' : 'yrs'} · Target {formatINR(goal.targetAmount, { decimals: 1 })}
                       </Text>
                     </View>
                     <Text style={styles.goalRowSip}>
                       {goal.monthlyRequiredSip > 0
-                        ? `${formatCroreGoal(goal.monthlyRequiredSip)}/mo`
+                        ? `${formatINR(goal.monthlyRequiredSip, { decimals: 1 })}/mo`
                         : 'On track ✓'}
                     </Text>
                   </View>
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   metricsRow: { flexDirection: 'row', gap: 12 },
   metricCard: { flex: 1, backgroundColor: '#fff', borderRadius: 14, padding: 14, gap: 4, elevation: 1 },
   metricLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
-  metricValue: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  metricValue: { fontSize: 16, fontWeight: '700', color: '#111827' },
 
   // What-If section
   whatIfCard: { backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 16, elevation: 1 },
@@ -506,14 +506,14 @@ const styles = StyleSheet.create({
   comparisonNew: { fontSize: 15, fontWeight: '700' },
   comparisonDelta: { fontSize: 12, fontWeight: '600' },
 
-  tableCard: { backgroundColor: '#fff', borderRadius: 14, padding: 14, gap: 8, elevation: 1 },
-  tableTitle: { fontSize: 14, fontWeight: '700', color: '#374151' },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#E5E7EB', paddingBottom: 6 },
-  th: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
-  tableRow: { flexDirection: 'row', paddingVertical: 6 },
-  fireRow: { backgroundColor: '#F0FDF4', borderRadius: 6, paddingHorizontal: 4 },
-  td: { fontSize: 14, color: '#374151' },
-  fireTd: { color: '#1B4332', fontWeight: '700' },
+  projectionRow: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 16,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    elevation: 1,
+  },
+  projectionRowLabel: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  projectionRowSub: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  projectionRowChevron: { fontSize: 22, color: '#9CA3AF' },
   disclaimerBox: { backgroundColor: '#FEF9C3', borderRadius: 10, padding: 12 },
   disclaimerText: { fontSize: 12, color: '#92400E', lineHeight: 18 },
   goalsCard: { backgroundColor: '#fff', borderRadius: 14, padding: 16, gap: 12, elevation: 1 },
@@ -529,4 +529,18 @@ const styles = StyleSheet.create({
   goalRowName: { fontSize: 14, fontWeight: '600', color: '#111827' },
   goalRowMeta: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
   goalRowSip: { fontSize: 14, fontWeight: '700', color: '#1B4332' },
+
+  // Empty state — no investments/FIRE data yet
+  emptyCard: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8,
+    elevation: 1,
+  },
+  emptyIcon: { fontSize: 40, marginBottom: 4 },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  emptySub: { fontSize: 13, color: '#6B7280', textAlign: 'center', lineHeight: 19 },
+  emptyButton: {
+    marginTop: 6, backgroundColor: '#1B4332', borderRadius: 10,
+    paddingHorizontal: 20, paddingVertical: 10,
+  },
+  emptyButtonText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
